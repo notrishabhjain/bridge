@@ -1,0 +1,1229 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Initialize Android project with package `com.sentinel.bridge`, minSdk 26, Kotlin 2.x": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588998721
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589036227
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589248640
+      }
+    ],
+    "2. Configure Gradle multi-module structure: `app`, `core/domain`, `core/data`, `core/common`, `feature/pipeline`, `feature/accessibility`, `feature/notification`, `feature/ai`, `feature/setup`, `native`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588998919
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589258495
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589499401
+      }
+    ],
+    "3. Add `libs.versions.toml` with all dependency versions pinned (Hilt, Room, WorkManager, DataStore, Coroutines, Compose, JUnit5, MockK, Turbine, Detekt)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999043
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589507976
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595501784
+      }
+    ],
+    "4. Configure `native/CMakeLists.txt` with llama.cpp submodule reference and all required build flags disabled": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999177
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595513003
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595598105
+      }
+    ],
+    "5. Add `.gitmodules` pointing to `https://github.com/ggerganov/llama.cpp.git` at `native/third_party/llama.cpp/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999250
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595604504
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595660190
+      }
+    ],
+    "6. Add `detekt.yml` with ForbiddenComment (TODO/FIXME), NoWildcardImports, GlobalCoroutineUsage rules active": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999387
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595665704
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595727687
+      }
+    ],
+    "7. Create empty Hilt `@HiltAndroidApp SentinelApplication`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999471
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595732478
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595785763
+      }
+    ],
+    "8. Create all five plugin interfaces in `core/domain/interfaces/` with exact signatures from architecture steering file": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999550
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785595791427
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596343731
+      }
+    ],
+    "9. Create `InputContext` data class and `EventSource` enum in `core/domain/model/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999636
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596348453
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596471017
+      }
+    ],
+    "10. Create `PipelineCommand` sealed class with all subclasses in `feature/pipeline/commands/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999721
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596475655
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596567132
+      }
+    ],
+    "11. Create `SentinelError` data class and `ErrorCategory` enum in `core/domain/model/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999803
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596572531
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596738733
+      }
+    ],
+    "12. Create `InferenceConfig` data class in `core/domain/model/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999888
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596743655
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596799344
+      }
+    ],
+    "13. Implement Room database: `PipelineSessionEntity`, `LogEntryEntity`, `CapabilityProfileEntity`, `PipelineResultEntity` with WAL mode, FK enabled, schema export to `schemas/`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785588999978
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785596804483
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597010916
+      }
+    ],
+    "14. Implement all Room DAOs with suspend functions and Flow for reactive queries": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000055
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597015663
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597127604
+      }
+    ],
+    "15. Implement `LogRepository.insertWithRotation()` — deletes sessions beyond 100 after every insert": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000134
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597132985
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597231192
+      }
+    ],
+    "16. Implement DataStore feature flags with all keys and defaults from architecture doc": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000215
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597236262
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597323373
+      }
+    ],
+    "17. Implement DataStore app settings with all keys and defaults from architecture doc": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000298
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597329317
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597483408
+      }
+    ],
+    "18. Implement `SentinelLogger` — structured JSON to Logcat (`Log.d`) + Room via `LogRepository`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000385
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597488374
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597624899
+      }
+    ],
+    "19. Implement `FileStorageProvider` — transcript save/load/delete at `getExternalFilesDir(\"transcripts\")`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000465
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597630717
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597716509
+      }
+    ],
+    "20. Implement `CapabilityManager` — all capability checks as `StateFlow<CapabilityState>`, startup check returns `CapabilityReport`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000571
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597722974
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597913969
+      }
+    ],
+    "21. Implement `SentinelNotificationListener` with `SharedFlow<TranscriptionCompleteEvent>` and configurable notification text matching": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000638
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785597918899
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785598102988
+      }
+    ],
+    "22. Create `FakeAccessibilityGateway` implementing `AccessibilityGateway` with controllable stubs for all methods": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000698
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785598109763
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785599975441
+      }
+    ],
+    "23. Create `FakeAIProvider` implementing `AIProvider` with configurable response, failure, and call count": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000765
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785599980637
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785600073319
+      }
+    ],
+    "24. Write unit tests for `LogRepository` rotation (exactly 100 sessions retained)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000835
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785600078980
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601118550
+      }
+    ],
+    "25. Write unit tests for `CapabilityManager` (each capability check branch)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000904
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601124013
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601274258
+      }
+    ],
+    "26. Write instrumentation tests for all Room DAOs (insert, query, update, cascade delete, migration)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589000975
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601279309
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601492792
+      }
+    ],
+    "27. Implement `CommandHandler<T>` interface and base retry logic with exponential backoff (1s, 2s, 4s, 8s)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001036
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601499453
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601804397
+      }
+    ],
+    "28. Implement `CommandBus` — `Channel<PipelineCommand>`, dedicated `CoroutineScope`, dispatch to handler map (Hilt multibinding)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001102
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785601809965
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602164729
+      }
+    ],
+    "29. Implement `PipelineOrchestrator` — full state machine, CapabilityManager check, WorkManager enqueue, stage persistence": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001389
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602170921
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602504384
+      }
+    ],
+    "30. Implement `PipelineWorker` (WorkManager `CoroutineWorker`) — loads session from Room, calls `orchestrator.resumePipeline()`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001535
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602512135
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602602318
+      }
+    ],
+    "31. Implement `PipelineEntryReceiver` (BroadcastReceiver) — parses START_PIPELINE intent, validates extras, triggers orchestrator": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001659
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602608974
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602948507
+      }
+    ],
+    "32. Implement `MacroDroidActionProvider` — broadcasts PIPELINE_COMPLETE and PIPELINE_FAILED intents with correct extras": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001811
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785602954070
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785603165194
+      }
+    ],
+    "33. Implement stub `CommandHandler` for each `PipelineCommand` subclass (no business logic yet — log + persist stage + return success)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589001926
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785603176683
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785603336670
+      }
+    ],
+    "34. Write unit tests for `PipelineOrchestrator` state transitions (valid + invalid transitions)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002054
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785603342678
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785676403786
+      }
+    ],
+    "35. Write unit tests for each stub `CommandHandler` (retry behavior, error categories, stage persistence)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002160
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785676410059
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785676812099
+      }
+    ],
+    "36. Write instrumentation tests for WorkManager pipeline (enqueue → complete → Room state correct)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002271
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785676818236
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677010944
+      }
+    ],
+    "37. Write instrumentation tests for WorkManager recovery (kill mid-stage → restart → resume from correct stage)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002408
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677017876
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677242629
+      }
+    ],
+    "38. Write instrumentation tests for Intent contracts (PIPELINE_COMPLETE and PIPELINE_FAILED extras correct)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002503
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677248340
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677267173
+      }
+    ],
+    "39. Write `native/jni/native_bridge.cpp` — JNI wrapper exposing exactly 5 functions: `loadModel`, `infer`, `unloadModel`, `health`, `cancelInference`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002596
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677274059
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677397581
+      }
+    ],
+    "40. Implement cancellation via `std::atomic<bool>` flag checked in token generation callback": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002680
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677404635
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677410212
+      }
+    ],
+    "41. Write `NativeBridge.kt` with `external` declarations for all 5 JNI functions and `System.loadLibrary(\"sentinel_native\")`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002779
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677415974
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677514677
+      }
+    ],
+    "42. Implement `ModelRepository` — checksum verification (SHA-256), path resolution, config loading from `assets/model_config.json`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002874
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677521172
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677696313
+      }
+    ],
+    "43. Implement `LlamaCppProvider` — lazy model load, auto-unload after configurable idle timeout, cancellation via `AtomicBoolean`, all `AIProvider` methods": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589002971
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677702345
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677815452
+      }
+    ],
+    "44. Add `assets/model_config.json` with model name, download URL placeholder, checksum placeholder, version, contextSize, threads": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003065
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677821680
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677867544
+      }
+    ],
+    "45. Write unit tests for `LlamaCppProvider` using a fake `NativeBridge` (load, infer, unload, cancel, health, checksum failure)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003172
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785677873254
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678002857
+      }
+    ],
+    "46. Write unit tests for `ModelRepository` (checksum match, checksum mismatch, file not found)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003273
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678009066
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678148818
+      }
+    ],
+    "47. Implement `SentinelAccessibilityService` extending `AccessibilityService` with `RealAccessibilityGateway`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003376
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678162885
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678247691
+      }
+    ],
+    "48. Implement `RealAccessibilityGateway` — all `AccessibilityGateway` methods using `AccessibilityService` node APIs, timeout Flows (no Thread.sleep)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003484
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785678255793
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683354154
+      }
+    ],
+    "49. Implement `HyperOS2RecorderStrategy` — full automation sequence (openLatestRecording, clickShowText, selectLanguage, extractTranscriptNodes) using node resolution priority order": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003592
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683361132
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683482842
+      }
+    ],
+    "50. Implement `StrategyResolver` — reads `getprop ro.mi.os.version.name`, matches Xiaomi HyperOS 2.x, throws `UnsupportedDeviceException` otherwise": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003686
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683490695
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683658743
+      }
+    ],
+    "51. Implement `RecorderConfig` loaded from DataStore with all configurable values (recorderPackage, preferredLanguage, completionNotificationText, timeouts, fallbackCoordinates)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003771
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683665824
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683804384
+      }
+    ],
+    "52. Wire `WaitForTranscriptionHandler` to subscribe to `SentinelNotificationListener.transcriptionComplete` Flow with 180s timeout and single retry": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003878
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785683811164
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684068389
+      }
+    ],
+    "53. Implement `CapabilityManager.recordCapabilityProfile()` — opens Recorder, probes for expected nodes, saves `CapabilityProfileEntity` to Room": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589003986
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684075183
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684240346
+      }
+    ],
+    "54. Implement `CapabilityManager.validateCapabilityProfile()` — compares current Recorder nodes to stored profile, returns `ProfileMatchResult`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004129
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684246970
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684436660
+      }
+    ],
+    "55. Write unit tests for `HyperOS2RecorderStrategy` using `FakeAccessibilityGateway` (each step: happy path, retry, exhausted retries)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004229
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684444853
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684565960
+      }
+    ],
+    "56. Write unit tests for `StrategyResolver` (Xiaomi HyperOS 2 → correct strategy, other combinations → exception)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004320
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684572859
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684721835
+      }
+    ],
+    "57. Write unit tests for `WaitForTranscriptionHandler` (notification arrives in time, timeout, retry then timeout)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004414
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785684727842
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785685015094
+      }
+    ],
+    "58. Implement `PromptRepository` — loads from `assets/prompts/`, manual YAML frontmatter parser (no library), caches parsed templates": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004520
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785685030020
+      },
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785685167901
+      }
+    ],
+    "59. Implement `PromptRenderer` — injects all variables (transcript, language, sessionId, conversationMemory, userPreferences, schema) into prompt body": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004618
+      }
+    ],
+    "60. Add `assets/prompts/task_extraction_v1.md` with YAML frontmatter and task extraction prompt body": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004722
+      }
+    ],
+    "61. Add `assets/prompts/summary_v1.md` with YAML frontmatter and summarization prompt body": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004868
+      }
+    ],
+    "62. Implement `RuleParser` — loads and parses `assets/rules/default_rules.json` (lazy, cached)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589004975
+      }
+    ],
+    "63. Implement `RulesEngine` — evaluates Pre-AI and Post-AI passes in priority order, returns `RuleDecision`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005075
+      }
+    ],
+    "64. Add `assets/rules/default_rules.json` with MVP rules: ignore_otp, ignore_banking_otp, ignore_promotional, reject_low_confidence, flag_medium_confidence, filter_low_confidence_tasks": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005177
+      }
+    ],
+    "65. Add `assets/rules/rule_schema.json` for rule file validation": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005272
+      }
+    ],
+    "66. Implement `ResponseParser` — strips markdown fences, extracts JSON object, maps to Kotlin domain objects": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005377
+      }
+    ],
+    "67. Implement `JSONValidator` — schema validation, repair pipeline (strip fences → trailing commas → escape chars), returns `ValidationResult`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005464
+      }
+    ],
+    "68. Wire all AI handlers in `CommandBus`: `BuildPromptHandler`, `RunInferenceHandler`, `ParseResponseHandler`, `ValidateJsonHandler`, `RunRulesPreAIHandler`, `RunRulesPostAIHandler`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005568
+      }
+    ],
+    "69. Write unit tests for `PromptRepository` (frontmatter parsing, missing fields, variable injection)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005658
+      }
+    ],
+    "70. Write unit tests for `RulesEngine` (each rule type, phase ordering, priority, disabled rules)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005749
+      }
+    ],
+    "71. Write unit tests for `JSONValidator` (valid, fences, trailing commas, invalid, schema missing field)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005844
+      }
+    ],
+    "72. Write integration test for full AI pipeline using `FakeAIProvider` (prompt built → fake LLM response → validated JSON)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589005929
+      }
+    ],
+    "73. Implement `SetupWizardActivity` with Compose UI — sequenced steps: Accessibility, Notification Listener, device check, Recorder inspection, model download, checksum verify": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006015
+      }
+    ],
+    "74. Implement model download with progress in the setup wizard (HTTP download using `DownloadManager` — this is the ONLY place network is used, behind user action in setup)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006099
+      }
+    ],
+    "75. On successful setup completion, set `setupComplete = true` in DataStore and record `CapabilityProfile` to Room": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006203
+      }
+    ],
+    "76. On subsequent launches, `CapabilityManager.validateCapabilityProfile()` runs; mismatch broadcasts `CAPABILITY_MISMATCH`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006294
+      }
+    ],
+    "77. Wire all Hilt modules: bind interfaces to implementations, provide Room, WorkManager, DataStore instances": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006394
+      }
+    ],
+    "78. Write instrumentation test for full pipeline end-to-end with all fakes (Intent in → stages execute → PIPELINE_COMPLETE Intent out → Room state = COMPLETE)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006493
+      }
+    ],
+    "79. Write instrumentation test for pipeline failure path (FakeAIProvider.shouldFail = true → PIPELINE_FAILED Intent with correct error code)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006589
+      }
+    ],
+    "80. Manual device test on Redmi Turbo 5: 5-minute Hindi call (document result in PR)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006687
+      }
+    ],
+    "81. Manual device test on Redmi Turbo 5: 30-minute Hindi call (document result in PR)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006783
+      }
+    ],
+    "82. Manual device test: process kill mid-INFERENCE → WorkManager resume (document result in PR)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006885
+      }
+    ],
+    "83. Write `.github/workflows/ci.yml` — full workflow: checkout+submodules, JDK 17, NDK r26d, Gradle cache, CMake cache, build llama.cpp, assemble debug, unit tests, lint, Detekt, upload artifact": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589006991
+      }
+    ],
+    "84. Add release job to ci.yml — triggers on `v*` tags, decodes keystore from secrets, assembles release APK, creates GitHub Release": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007091
+      }
+    ],
+    "85. Run `./gradlew detektBaseline` locally, commit `detekt-baseline.xml`": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007192
+      }
+    ],
+    "86. Verify CI passes on clean clone with submodule (`git clone --recurse-submodules`)": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007296
+      }
+    ],
+    "87. Verify signed release APK installs and runs on Redmi Turbo 5": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007379
+      }
+    ],
+    "88. Verify KDoc present on all public declarations in `core/domain/` and all feature module interfaces": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007463
+      }
+    ],
+    "89. Write `README.md` — setup instructions, first-run guide, MacroDroid macro setup, manual test checklist": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007559
+      }
+    ],
+    "90. Export Room schema for version 1 to `schemas/` and commit": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007663
+      }
+    ],
+    "91. Final Detekt run — ensure no new violations above baseline": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007777
+      }
+    ],
+    "92. Final lint run — zero warnings": [
+      {
+        "executionId": "b18e3f34-95b3-4772-b1c7-36cc9d71ffe2",
+        "chatSessionId": "sess_b5eeded3-e29f-4461-9734-3218ddc02ba7",
+        "timestamp": 1785589007864
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+# Detekt Configuration — Sentinel AI Bridge
+# Enforces architecture decisions: no TODO comments, no wildcard imports, no GlobalScope.
+
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+# -----------------------------------------------------------------------------
+# Style Rules
+# -----------------------------------------------------------------------------
+style:
+  ForbiddenComment:
+    active: true
+    values:
+      - "TODO"
+      - "FIXME"
+      - "HACK"
+      - "STOPSHIP"
+    allowedPatterns: ""
+
+  NoWildcardImports:
+    active: true
+
+# -----------------------------------------------------------------------------
+# Coroutines Rules
+# -----------------------------------------------------------------------------
+coroutines:
+  GlobalCoroutineUsage:
+    active: true

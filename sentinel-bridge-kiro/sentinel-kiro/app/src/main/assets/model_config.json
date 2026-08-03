@@ -1,0 +1,8 @@
+{
+  "name": "qwen3-4b-instruct-q4_k_m",
+  "downloadUrl": "https://github.com/notrishabhjain/bridge/releases/download/v1.0.0/qwen3-4b-instruct-q4_k_m.gguf",
+  "checksum": "PLACEHOLDER_SHA256_CHECKSUM_REPLACE_AFTER_DOWNLOAD",
+  "version": "1.0.0",
+  "contextSize": 4096,
+  "threads": 4
+}

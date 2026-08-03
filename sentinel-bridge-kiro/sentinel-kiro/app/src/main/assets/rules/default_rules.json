@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "description": "Default rules for Sentinel AI Bridge. Pre-AI rules filter inputs before LLM inference. Post-AI rules normalize and validate outputs.",
+  "rules": [
+    {
+      "id": "ignore_otp",
+      "enabled": true,
+      "priority": 100,
+      "phase": "PRE_AI",
+      "description": "Ignore messages containing OTPs or verification codes",
+      "match": {
+        "contains": [
+          "OTP",
+          "one-time password",
+          "one time password",
+          "verification code",
+          "verify your",
+          "is your OTP",
+          "is your code"
+        ]
+      },
+      "action": "IGNORE"
+    },
+    {
+      "id": "ignore_banking_otp",
+      "enabled": true,
+      "priority": 99,
+      "phase": "PRE_AI",
+      "description": "Ignore banking transaction OTPs",
+      "match": {
+        "contains": [
+          "transaction OTP",
+          "UPI PIN",
+          "CVV",
+          "do not share",
+          "never share"
+        ]
+      },
+      "action": "IGNORE"
+    },
+    {
+      "id": "ignore_promotional",
+      "enabled": true,
+      "priority": 90,
+      "phase": "PRE_AI",
+      "description": "Ignore promotional messages",
+      "match": {
+        "contains": [
+          "OFFER",
+          "% OFF",
+          "SALE",
+          "BUY NOW",
+          "LIMITED TIME",
+          "CLICK HERE",
+          "Unsubscribe"
+        ]
+      },
+      "action": "IGNORE"
+    },
+    {
+      "id": "ignore_delivery_alerts",
+      "enabled": true,
+      "priority": 85,
+      "phase": "PRE_AI",
+      "description": "Ignore automated delivery status messages",
+      "match": {
+        "contains": [
+          "your order has been",
+          "your package",
+          "out for delivery",
+          "delivered successfully",
+          "shipment update"
+        ]
+      },
+      "action": "IGNORE"
+    },
+    {
+      "id": "reject_low_confidence",
+      "enabled": true,
+      "priority": 50,
+      "phase": "POST_AI",
+      "description": "Reject overall result if confidence is too low",
+      "match": {
+        "confidenceBelow": 0.5
+      },
+      "action": "REJECT"
+    },
+    {
+      "id": "flag_medium_confidence",
+      "enabled": true,
+      "priority": 40,
+      "phase": "POST_AI",
+      "description": "Flag result for review if confidence is moderate",
+      "match": {
+        "confidenceBelow": 0.7,
+        "confidenceAbove": 0.5
+      },
+      "action": "FLAG"
+    },
+    {
+      "id": "filter_low_confidence_tasks",
+      "enabled": true,
+      "priority": 30,
+      "phase": "POST_AI",
+      "description": "Remove individual tasks with very low confidence from the result",
+      "match": {
+        "taskConfidenceBelow": 0.4
+      },
+      "action": "TRANSFORM",
+      "transform": "removeMatchingTasks"
+    }
+  ]
+}

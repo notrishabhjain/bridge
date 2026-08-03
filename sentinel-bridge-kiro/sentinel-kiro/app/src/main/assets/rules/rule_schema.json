@@ -1,0 +1,109 @@
+{
+  "title": "SentinelRuleFile",
+  "description": "Schema for Sentinel AI Bridge rule definition files. Validates the structure of default_rules.json and any custom rule files.",
+  "type": "object",
+  "required": ["version", "rules"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema version of the rule file. Increment when rule format changes."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the rule set's purpose."
+    },
+    "rules": {
+      "type": "array",
+      "description": "Ordered list of rules evaluated by the RulesEngine.",
+      "items": {
+        "type": "object",
+        "required": ["id", "enabled", "priority", "phase", "match", "action"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Unique snake_case identifier for the rule."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this rule is currently active."
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000,
+            "description": "Evaluation priority. Higher values are evaluated first within the same phase."
+          },
+          "phase": {
+            "type": "string",
+            "enum": ["PRE_AI", "POST_AI"],
+            "description": "Pipeline phase in which this rule is evaluated."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable explanation of what this rule does."
+          },
+          "match": {
+            "type": "object",
+            "description": "Criteria that determine whether the rule triggers.",
+            "properties": {
+              "contains": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "description": "List of substrings to match against input content (case-insensitive). Any match triggers the rule."
+              },
+              "confidenceBelow": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Matches when overall result confidence is below this threshold."
+              },
+              "confidenceAbove": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Matches when overall result confidence is above this threshold. Used with confidenceBelow to define a range."
+              },
+              "taskConfidenceBelow": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Matches individual tasks with confidence below this threshold."
+              },
+              "source": {
+                "type": "string",
+                "description": "Optional event source filter (e.g., CALL, NOTIFICATION)."
+              }
+            },
+            "additionalProperties": false
+          },
+          "action": {
+            "type": "string",
+            "enum": ["IGNORE", "REJECT", "FLAG", "TRANSFORM", "PASS"],
+            "description": "Action to take when the rule matches. IGNORE silently drops input. REJECT produces an error. FLAG marks for review. TRANSFORM modifies the result. PASS allows through."
+          },
+          "transform": {
+            "type": "string",
+            "enum": ["removeMatchingTasks"],
+            "description": "Transformation to apply when action is TRANSFORM. Required when action is TRANSFORM."
+          }
+        },
+        "additionalProperties": false,
+        "if": {
+          "properties": {
+            "action": { "const": "TRANSFORM" }
+          }
+        },
+        "then": {
+          "required": ["transform"]
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

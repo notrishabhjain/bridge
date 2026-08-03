@@ -1,0 +1,3 @@
+<resources>
+    <string name="accessibility_service_description">Sentinel AI Bridge uses this service to automate transcript extraction from the Xiaomi Recorder app.</string>
+</resources>

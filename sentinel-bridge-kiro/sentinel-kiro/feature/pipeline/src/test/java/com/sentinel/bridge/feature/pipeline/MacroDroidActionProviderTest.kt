@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import io.mockk.verify
+import io.mockk.anyNullable
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +31,7 @@ class MacroDroidActionProviderTest {
     @BeforeEach
     fun setUp() {
         mockkConstructor(Intent::class)
-        every { anyConstructed<Intent>().putExtra(any<String>(), any<String?>()) } returns mockk()
+        every { anyConstructed<Intent>().putExtra(any<String>(), anyNullable<String>()) } returns mockk()
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Boolean>()) } returns mockk()
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Float>()) } returns mockk()
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Long>()) } returns mockk()

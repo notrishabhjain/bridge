@@ -3,22 +3,20 @@ package com.sentinel.bridge.feature.pipeline
 import android.content.Context
 import android.content.Intent
 import com.sentinel.bridge.core.domain.model.ActionOutcome
-import com.sentinel.bridge.core.domain.model.CalendarEvent
 import com.sentinel.bridge.core.domain.model.EventSource
 import com.sentinel.bridge.core.domain.model.ExtractedTask
-import com.sentinel.bridge.core.domain.model.FollowUp
-import com.sentinel.bridge.core.domain.model.InputAttachment
 import com.sentinel.bridge.core.domain.model.InputContext
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.TaskPriority
-import io.mockk.every
+import io.mockk.anyConstructed
 import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,12 +26,17 @@ class MacroDroidActionProviderTest {
 
     private lateinit var context: Context
     private lateinit var provider: MacroDroidActionProvider
-    private val intentSlot = slot<Intent>()
 
     @BeforeEach
     fun setUp() {
+        mockkConstructor(Intent::class)
         context = mockk(relaxed = true)
         provider = MacroDroidActionProvider(context)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        unmockkConstructor(Intent::class)
     }
 
     @Test
@@ -71,16 +74,14 @@ class MacroDroidActionProviderTest {
 
         val outcome = provider.dispatch(result, inputContext)
 
-        verify(exactly = 1) { context.sendBroadcast(capture(intentSlot)) }
-        val intent = intentSlot.captured
-
-        assertEquals(MacroDroidActionProvider.ACTION_PIPELINE_COMPLETE, intent.action)
-        assertEquals("session-abc", intent.getStringExtra(MacroDroidActionProvider.EXTRA_SESSION_ID))
-        assertEquals("COMPLETE", intent.getStringExtra(MacroDroidActionProvider.EXTRA_STATUS))
-        assertEquals("Meeting follow-up tasks extracted", intent.getStringExtra(MacroDroidActionProvider.EXTRA_SUMMARY))
-        assertEquals(0.92f, intent.getFloatExtra(MacroDroidActionProvider.EXTRA_CONFIDENCE, 0f))
-        assertEquals(4500L, intent.getLongExtra(MacroDroidActionProvider.EXTRA_PROCESSING_TIME_MS, 0L))
-        assertEquals("macro-123", intent.getStringExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID))
+        verify(exactly = 1) { context.sendBroadcast(any()) }
+        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_COMPLETE) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SESSION_ID, "session-abc") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_STATUS, "COMPLETE") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SUMMARY, "Meeting follow-up tasks extracted") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_CONFIDENCE, 0.92f) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_PROCESSING_TIME_MS, 4500L) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, "macro-123") }
 
         assertInstanceOf(ActionOutcome.Success::class.java, outcome)
         assertEquals("macrodroid", (outcome as ActionOutcome.Success).actionId)
@@ -96,10 +97,9 @@ class MacroDroidActionProviderTest {
 
         provider.dispatch(result, inputContext)
 
-        verify(exactly = 1) { context.sendBroadcast(capture(intentSlot)) }
-        val intent = intentSlot.captured
-
-        assertNull(intent.getStringExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID))
+        verify(exactly = 1) { context.sendBroadcast(any()) }
+        // Verify no non-null macroInvocationId extra was added
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, any<String>()) }
     }
 
     @Test
@@ -109,11 +109,9 @@ class MacroDroidActionProviderTest {
 
         provider.dispatch(result, inputContext)
 
-        verify(exactly = 1) { context.sendBroadcast(capture(intentSlot)) }
-        val intent = intentSlot.captured
-
-        assertNull(intent.getStringExtra("rawTranscript"))
-        assertNull(intent.getStringExtra("rawContent"))
+        verify(exactly = 1) { context.sendBroadcast(any()) }
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("rawTranscript"), any<String>()) }
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("rawContent"), any<String>()) }
     }
 
     @Test
@@ -126,16 +124,14 @@ class MacroDroidActionProviderTest {
             macroInvocationId = "macro-456"
         )
 
-        verify(exactly = 1) { context.sendBroadcast(capture(intentSlot)) }
-        val intent = intentSlot.captured
-
-        assertEquals(MacroDroidActionProvider.ACTION_PIPELINE_FAILED, intent.action)
-        assertEquals("session-fail", intent.getStringExtra(MacroDroidActionProvider.EXTRA_SESSION_ID))
-        assertEquals("FAILED", intent.getStringExtra(MacroDroidActionProvider.EXTRA_STATUS))
-        assertEquals("JSON_VALIDATION_FAILED", intent.getStringExtra(MacroDroidActionProvider.EXTRA_ERROR_CODE))
-        assertEquals("VALIDATE_JSON", intent.getStringExtra(MacroDroidActionProvider.EXTRA_ERROR_STAGE))
-        assertTrue(intent.getBooleanExtra(MacroDroidActionProvider.EXTRA_RETRYABLE, false))
-        assertEquals("macro-456", intent.getStringExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID))
+        verify(exactly = 1) { context.sendBroadcast(any()) }
+        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_FAILED) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SESSION_ID, "session-fail") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_STATUS, "FAILED") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_ERROR_CODE, "JSON_VALIDATION_FAILED") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_ERROR_STAGE, "VALIDATE_JSON") }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_RETRYABLE, true) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, "macro-456") }
     }
 
     @Test
@@ -148,12 +144,11 @@ class MacroDroidActionProviderTest {
             macroInvocationId = null
         )
 
-        verify(exactly = 1) { context.sendBroadcast(capture(intentSlot)) }
-        val intent = intentSlot.captured
-
-        assertEquals(MacroDroidActionProvider.ACTION_PIPELINE_FAILED, intent.action)
-        assertNull(intent.getStringExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID))
-        assertEquals(false, intent.getBooleanExtra(MacroDroidActionProvider.EXTRA_RETRYABLE, true))
+        verify(exactly = 1) { context.sendBroadcast(any()) }
+        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_FAILED) }
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_RETRYABLE, false) }
+        // Verify no non-null macroInvocationId extra was added
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, any<String>()) }
     }
 
     private fun createPipelineResult(

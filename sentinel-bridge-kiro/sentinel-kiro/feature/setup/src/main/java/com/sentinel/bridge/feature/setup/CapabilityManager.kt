@@ -1,7 +1,6 @@
 package com.sentinel.bridge.feature.setup
 
 import android.app.ActivityManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.StatFs
@@ -201,14 +200,9 @@ class CapabilityManager @Inject constructor(
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ) ?: return false
 
-        val expectedComponent = ComponentName(
-            context.packageName,
-            "$ACCESSIBILITY_SERVICE_CLASS"
-        ).flattenToString()
+        val expectedComponent = "${context.packageName}/$ACCESSIBILITY_SERVICE_CLASS"
 
-        return enabledServices.split(SERVICES_SEPARATOR).any { componentString ->
-            ComponentName.unflattenFromString(componentString)?.flattenToString() == expectedComponent
-        }
+        return enabledServices.split(SERVICES_SEPARATOR).any { it.trim() == expectedComponent }
     }
 
     /**
@@ -225,14 +219,9 @@ class CapabilityManager @Inject constructor(
             ENABLED_NOTIFICATION_LISTENERS
         ) ?: return false
 
-        val expectedComponent = ComponentName(
-            context.packageName,
-            "$NOTIFICATION_LISTENER_CLASS"
-        ).flattenToString()
+        val expectedComponent = "${context.packageName}/$NOTIFICATION_LISTENER_CLASS"
 
-        return enabledListeners.split(SERVICES_SEPARATOR).any { componentString ->
-            ComponentName.unflattenFromString(componentString)?.flattenToString() == expectedComponent
-        }
+        return enabledListeners.split(SERVICES_SEPARATOR).any { it.trim() == expectedComponent }
     }
 
     /**

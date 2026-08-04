@@ -21,6 +21,14 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+            all { it.useJUnitPlatform() }
+        }
+    }
 }
 
 dependencies {
@@ -48,6 +56,3 @@ dependencies {
     testImplementation(libs.workmanager.testing)
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}

@@ -109,15 +109,20 @@ class PipelineRecoveryTest {
     fun `resume from OPEN_RECORDER executes all 16 commands`() = runTest {
         val session = createSessionAtStage(PipelineStage.OPEN_RECORDER)
         coEvery { pipelineSessionDao.getById(testSessionId) } returns session
-        coEvery { commandBus.dispatch(any()) } returns CommandResult.Success(testSessionId)
+
+        val dispatchedCommands = mutableListOf<PipelineCommand>()
+        coEvery { commandBus.dispatch(any()) } answers {
+            dispatchedCommands.add(firstArg())
+            CommandResult.Success(testSessionId)
+        }
 
         val result = orchestrator.resumePipeline(testSessionId)
 
         assertTrue(result is CommandResult.Success)
-        coVerify(exactly = 16) { commandBus.dispatch(any()) }
+        assertEquals(16, dispatchedCommands.size)
 
         // First command dispatched is OpenRecorder
-        coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.OpenRecorder>()) }
+        assertTrue(dispatchedCommands.any { it is PipelineCommand.OpenRecorder })
 
         // Session marked COMPLETE
         coVerify {
@@ -138,15 +143,20 @@ class PipelineRecoveryTest {
     fun `resume from INFERENCE executes only 7 remaining commands`() = runTest {
         val session = createSessionAtStage(PipelineStage.INFERENCE)
         coEvery { pipelineSessionDao.getById(testSessionId) } returns session
-        coEvery { commandBus.dispatch(any()) } returns CommandResult.Success(testSessionId)
+
+        val dispatchedCommands = mutableListOf<PipelineCommand>()
+        coEvery { commandBus.dispatch(any()) } answers {
+            dispatchedCommands.add(firstArg())
+            CommandResult.Success(testSessionId)
+        }
 
         val result = orchestrator.resumePipeline(testSessionId)
 
         assertTrue(result is CommandResult.Success)
-        coVerify(exactly = 7) { commandBus.dispatch(any()) }
+        assertEquals(7, dispatchedCommands.size)
 
         // First command dispatched is RunInference
-        coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.RunInference>()) }
+        assertTrue(dispatchedCommands.any { it is PipelineCommand.RunInference })
 
         // Earlier stages were NOT executed
         coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.OpenRecorder>()) }
@@ -178,15 +188,20 @@ class PipelineRecoveryTest {
     fun `resume from RETURN_INTENT executes only 1 command`() = runTest {
         val session = createSessionAtStage(PipelineStage.RETURN_INTENT)
         coEvery { pipelineSessionDao.getById(testSessionId) } returns session
-        coEvery { commandBus.dispatch(any()) } returns CommandResult.Success(testSessionId)
+
+        val dispatchedCommands = mutableListOf<PipelineCommand>()
+        coEvery { commandBus.dispatch(any()) } answers {
+            dispatchedCommands.add(firstArg())
+            CommandResult.Success(testSessionId)
+        }
 
         val result = orchestrator.resumePipeline(testSessionId)
 
         assertTrue(result is CommandResult.Success)
-        coVerify(exactly = 1) { commandBus.dispatch(any()) }
+        assertEquals(1, dispatchedCommands.size)
 
         // Only ReturnIntent is dispatched
-        coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.ReturnIntent>()) }
+        assertTrue(dispatchedCommands.any { it is PipelineCommand.ReturnIntent })
 
         // All other stages skipped
         coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.OpenRecorder>()) }
@@ -239,18 +254,23 @@ class PipelineRecoveryTest {
     fun `resume from PIPELINE_CREATED executes all 16 commands`() = runTest {
         val session = createSessionAtStage(PipelineStage.PIPELINE_CREATED)
         coEvery { pipelineSessionDao.getById(testSessionId) } returns session
-        coEvery { commandBus.dispatch(any()) } returns CommandResult.Success(testSessionId)
+
+        val dispatchedCommands = mutableListOf<PipelineCommand>()
+        coEvery { commandBus.dispatch(any()) } answers {
+            dispatchedCommands.add(firstArg())
+            CommandResult.Success(testSessionId)
+        }
 
         val result = orchestrator.resumePipeline(testSessionId)
 
         assertTrue(result is CommandResult.Success)
-        coVerify(exactly = 16) { commandBus.dispatch(any()) }
+        assertEquals(16, dispatchedCommands.size)
 
         // First command dispatched is OpenRecorder (not PIPELINE_CREATED itself)
-        coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.OpenRecorder>()) }
+        assertTrue(dispatchedCommands.any { it is PipelineCommand.OpenRecorder })
 
         // Last command is ReturnIntent
-        coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.ReturnIntent>()) }
+        assertTrue(dispatchedCommands.any { it is PipelineCommand.ReturnIntent })
 
         // Session marked COMPLETE
         coVerify {

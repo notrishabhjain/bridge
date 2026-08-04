@@ -4,7 +4,23 @@
 #include <android/log.h>
 
 #include "llama.h"
-#include "common.h"
+
+// llama_batch_add helper inlined here so we don't need to link common/
+static void llama_batch_add(
+        struct llama_batch             & batch,
+        llama_token                      id,
+        llama_pos                        pos,
+        const std::vector<llama_seq_id>& seq_ids,
+        bool                             logits) {
+    batch.token   [batch.n_tokens] = id;
+    batch.pos     [batch.n_tokens] = pos;
+    batch.n_seq_id[batch.n_tokens] = static_cast<int32_t>(seq_ids.size());
+    for (size_t i = 0; i < seq_ids.size(); ++i) {
+        batch.seq_id[batch.n_tokens][i] = seq_ids[i];
+    }
+    batch.logits  [batch.n_tokens] = logits;
+    batch.n_tokens++;
+}
 
 #define TAG "SentinelNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
@@ -161,8 +177,8 @@ Java_com_sentinel_bridge_native_1_NativeBridge_infer(
 
     LOGI("Prompt tokenized: %d tokens", n_prompt_tokens);
 
-    // Clear the KV cache before new inference
-    llama_kv_cache_clear(g_ctx);
+    // Clear the KV cache before new inference (renamed from llama_kv_cache_clear in recent llama.cpp)
+    llama_kv_self_clear(g_ctx);
 
     // Process prompt tokens in a single batch
     llama_batch batch = llama_batch_init(n_prompt_tokens, 0, 1);
@@ -192,7 +208,8 @@ Java_com_sentinel_bridge_native_1_NativeBridge_infer(
             static_cast<int32_t>(n_prompt_max),  // penalty_last_n
             repeat_penalty,                       // penalty_repeat
             0.0f,                                 // penalty_freq
-            0.0f                                  // penalty_present
+            0.0f,                                 // penalty_present
+            false                                 // penalize_nl (added in recent llama.cpp)
     ));
     llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 

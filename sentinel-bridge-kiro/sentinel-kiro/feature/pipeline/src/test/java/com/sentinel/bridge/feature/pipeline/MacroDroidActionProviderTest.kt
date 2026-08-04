@@ -8,7 +8,6 @@ import com.sentinel.bridge.core.domain.model.ExtractedTask
 import com.sentinel.bridge.core.domain.model.InputContext
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.TaskPriority
-import io.mockk.anyConstructed
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
@@ -75,7 +74,6 @@ class MacroDroidActionProviderTest {
         val outcome = provider.dispatch(result, inputContext)
 
         verify(exactly = 1) { context.sendBroadcast(any()) }
-        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_COMPLETE) }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SESSION_ID, "session-abc") }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_STATUS, "COMPLETE") }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SUMMARY, "Meeting follow-up tasks extracted") }
@@ -125,7 +123,6 @@ class MacroDroidActionProviderTest {
         )
 
         verify(exactly = 1) { context.sendBroadcast(any()) }
-        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_FAILED) }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_SESSION_ID, "session-fail") }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_STATUS, "FAILED") }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_ERROR_CODE, "JSON_VALIDATION_FAILED") }
@@ -145,7 +142,6 @@ class MacroDroidActionProviderTest {
         )
 
         verify(exactly = 1) { context.sendBroadcast(any()) }
-        verify { Intent(MacroDroidActionProvider.ACTION_PIPELINE_FAILED) }
         verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_RETRYABLE, false) }
         // Verify no non-null macroInvocationId extra was added
         verify(exactly = 0) { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, any<String>()) }

@@ -177,8 +177,8 @@ Java_com_sentinel_bridge_native_1_NativeBridge_infer(
 
     LOGI("Prompt tokenized: %d tokens", n_prompt_tokens);
 
-    // Clear the KV cache before new inference
-    llama_kv_cache_clear(g_ctx);
+    // Clear the KV cache before new inference (renamed from llama_kv_cache_clear in recent llama.cpp)
+    llama_kv_self_clear(g_ctx);
 
     // Process prompt tokens in a single batch
     llama_batch batch = llama_batch_init(n_prompt_tokens, 0, 1);
@@ -208,7 +208,8 @@ Java_com_sentinel_bridge_native_1_NativeBridge_infer(
             static_cast<int32_t>(n_prompt_max),  // penalty_last_n
             repeat_penalty,                       // penalty_repeat
             0.0f,                                 // penalty_freq
-            0.0f                                  // penalty_present
+            0.0f,                                 // penalty_present
+            false                                 // penalize_nl (added in recent llama.cpp)
     ));
     llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 

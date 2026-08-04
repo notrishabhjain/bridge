@@ -8,6 +8,7 @@ import com.sentinel.bridge.core.domain.model.ExtractedTask
 import com.sentinel.bridge.core.domain.model.InputContext
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.TaskPriority
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
@@ -40,6 +41,7 @@ class MacroDroidActionProviderTest {
 
     @AfterEach
     fun tearDown() {
+        clearAllMocks()
         unmockkConstructor(Intent::class)
     }
 

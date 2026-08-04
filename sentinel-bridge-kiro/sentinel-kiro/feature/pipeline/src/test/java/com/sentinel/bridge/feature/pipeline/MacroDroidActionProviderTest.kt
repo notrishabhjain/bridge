@@ -8,6 +8,7 @@ import com.sentinel.bridge.core.domain.model.ExtractedTask
 import com.sentinel.bridge.core.domain.model.InputContext
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.TaskPriority
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
@@ -29,6 +30,10 @@ class MacroDroidActionProviderTest {
     @BeforeEach
     fun setUp() {
         mockkConstructor(Intent::class)
+        every { anyConstructed<Intent>().putExtra(any<String>(), any<String?>()) } returns mockk()
+        every { anyConstructed<Intent>().putExtra(any<String>(), any<Boolean>()) } returns mockk()
+        every { anyConstructed<Intent>().putExtra(any<String>(), any<Float>()) } returns mockk()
+        every { anyConstructed<Intent>().putExtra(any<String>(), any<Long>()) } returns mockk()
         context = mockk(relaxed = true)
         provider = MacroDroidActionProvider(context)
     }

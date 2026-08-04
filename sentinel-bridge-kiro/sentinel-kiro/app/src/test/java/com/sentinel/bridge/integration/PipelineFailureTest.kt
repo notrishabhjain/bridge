@@ -403,9 +403,9 @@ class PipelineFailureTest {
      */
     @Suppress("UNCHECKED_CAST")
     private fun buildHandlerMapWithFailureAt(
-        failingCommand: Class<out PipelineCommand>,
+        failingCommand: Class<*>,
         error: SentinelError
-    ): Map<Class<out PipelineCommand>, CommandHandler<PipelineCommand>> {
+    ): Map<Class<*>, CommandHandler<PipelineCommand>> {
         val commandTypes = listOf(
             PipelineCommand.OpenRecorder::class.java,
             PipelineCommand.OpenRecording::class.java,

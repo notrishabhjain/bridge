@@ -29,8 +29,9 @@ android {
 
     @Suppress("UnstableApiUsage")
     testOptions {
-        unitTests.all {
-            it.useJUnitPlatform()
+        unitTests {
+            isReturnDefaultValues = true
+            all { it.useJUnitPlatform() }
         }
     }
 }

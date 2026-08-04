@@ -265,7 +265,7 @@ class PipelineEndToEndTest {
      * without requiring real handler dependencies (AI, Accessibility, Notification).
      */
     @Suppress("UNCHECKED_CAST")
-    private fun buildSuccessHandlerMap(): Map<Class<out PipelineCommand>, CommandHandler<PipelineCommand>> {
+    private fun buildSuccessHandlerMap(): Map<Class<*>, CommandHandler<PipelineCommand>> {
         val commandTypes = listOf(
             PipelineCommand.OpenRecorder::class.java,
             PipelineCommand.OpenRecording::class.java,

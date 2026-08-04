@@ -34,7 +34,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class CommandBus @Inject constructor(
-    private val handlers: Map<Class<out PipelineCommand>, @JvmSuppressWildcards CommandHandler<PipelineCommand>>
+    private val handlers: Map<Class<*>, @JvmSuppressWildcards CommandHandler<PipelineCommand>>
 ) {
 
     /**

@@ -232,8 +232,17 @@ class AppSettingsRepository @Inject constructor(
         /** Default: 180000ms (3 minutes) — maximum transcription wait time. */
         const val DEFAULT_TRANSCRIPTION_TIMEOUT_MS = 180_000L
 
-        /** Default: 2048 MB (2 GB) — minimum free RAM for model loading. */
-        const val DEFAULT_MIN_FREE_RAM_MB = 2048
+        /**
+         * Default: 1024 MB — headroom for the KV cache and compute buffers, which are
+         * anonymous allocations.
+         *
+         * Deliberately far below the model's size. llama.cpp memory-maps the GGUF, so
+         * the weights are paged from storage rather than held in anonymous memory, and
+         * Android's reported free RAM understates what is allocatable because cached
+         * processes are reclaimed on demand. The previous 2048 MB bar measured neither
+         * of those things and rejected devices that run the model fine.
+         */
+        const val DEFAULT_MIN_FREE_RAM_MB = 1024
 
         /**
          * Default: 3000 MB — must cover the model download, not just pipeline scratch

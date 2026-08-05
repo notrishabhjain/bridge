@@ -192,20 +192,37 @@ class PipelineOrchestrator @Inject constructor(
                 sessionId = sessionId,
                 stage = PipelineStage.CAPABILITY_CHECK.name,
                 message = "Manual analysis blocked: model=${report.modelValid}, " +
-                    "ram=${report.sufficientRam}, storage=${report.sufficientStorage}"
+                    "ram=${report.sufficientRam} (${report.availableRamMb}/${report.totalRamMb} MB " +
+                    "free, lowMemory=${report.lowMemory}), " +
+                    "storage=${report.sufficientStorage} (${report.availableStorageMb} MB free)"
             )
             return CommandResult.Failure(
                 SentinelError(
                     code = "ERR_CAPABILITY_CHECK",
                     category = ErrorCategory.SYSTEM,
+                    // Quote the measured figures. "Not enough memory" alone gives the
+                    // user nothing to act on and nothing to report back.
                     message = buildString {
                         append("Cannot run the model: ")
                         val problems = buildList {
                             if (!report.modelValid) add("the model file is missing")
-                            if (!report.sufficientRam) add("not enough free memory")
-                            if (!report.sufficientStorage) add("not enough free storage")
+                            if (!report.sufficientRam) {
+                                add(
+                                    if (report.lowMemory) {
+                                        "the system is low on memory right now " +
+                                            "(${report.availableRamMb} MB free of " +
+                                            "${report.totalRamMb} MB) — close some apps and retry"
+                                    } else {
+                                        "only ${report.availableRamMb} MB of " +
+                                            "${report.totalRamMb} MB RAM is free"
+                                    }
+                                )
+                            }
+                            if (!report.sufficientStorage) {
+                                add("only ${report.availableStorageMb} MB of storage is free")
+                            }
                         }
-                        append(problems.joinToString(", "))
+                        append(problems.joinToString("; "))
                     },
                     stage = PipelineStage.CAPABILITY_CHECK,
                     retryable = true,

@@ -83,6 +83,10 @@ enum class CapabilityState {
  * @property sufficientRam Whether available RAM meets the configured minimum threshold.
  * @property sufficientStorage Whether available storage meets the configured minimum threshold.
  * @property allPassed Whether all capability checks passed successfully.
+ * @property availableRamMb Free RAM observed at check time, for reporting.
+ * @property totalRamMb Total device RAM, for reporting.
+ * @property lowMemory Whether the system reported active memory pressure at check time.
+ * @property availableStorageMb Free storage observed at check time, for reporting.
  */
 data class CapabilityReport(
     val accessibilityEnabled: Boolean,
@@ -91,7 +95,13 @@ data class CapabilityReport(
     val modelValid: Boolean,
     val sufficientRam: Boolean,
     val sufficientStorage: Boolean,
-    val allPassed: Boolean
+    val allPassed: Boolean,
+    // Measured values carry defaults so callers that only assert on the booleans
+    // (notably the existing tests) keep compiling.
+    val availableRamMb: Long = 0,
+    val totalRamMb: Long = 0,
+    val lowMemory: Boolean = false,
+    val availableStorageMb: Long = 0
 )
 
 /**
@@ -175,6 +185,10 @@ class CapabilityManager @Inject constructor(
 
         val allPassed = accessibility && notificationListener && recorder && model && ram && storage
 
+        // Measured alongside the booleans so a failure can state the actual figures
+        // rather than only that a threshold was missed.
+        val memoryInfo = readMemoryInfo()
+
         return CapabilityReport(
             accessibilityEnabled = accessibility,
             notificationListenerEnabled = notificationListener,
@@ -182,7 +196,11 @@ class CapabilityManager @Inject constructor(
             modelValid = model,
             sufficientRam = ram,
             sufficientStorage = storage,
-            allPassed = allPassed
+            allPassed = allPassed,
+            availableRamMb = memoryInfo.availMem / BYTES_PER_MB,
+            totalRamMb = memoryInfo.totalMem / BYTES_PER_MB,
+            lowMemory = memoryInfo.lowMemory,
+            availableStorageMb = availableStorageMb()
         )
     }
 
@@ -288,11 +306,36 @@ class CapabilityManager @Inject constructor(
      *
      * @return `true` if available RAM exceeds the threshold; `false` otherwise.
      */
+    private fun readMemoryInfo(): ActivityManager.MemoryInfo {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return ActivityManager.MemoryInfo().also(activityManager::getMemoryInfo)
+    }
+
+    /**
+     * Checks whether the device can run inference right now.
+     *
+     * Deliberately does *not* require free RAM equal to the model's size. Android keeps
+     * memory occupied by cached processes and reclaims it on demand, so
+     * [ActivityManager.MemoryInfo.availMem] understates what is actually allocatable —
+     * and llama.cpp memory-maps the GGUF, so the weights are paged from storage rather
+     * than held as anonymous memory. Gating on the model's footprint therefore rejects
+     * devices that would run it perfectly well.
+     *
+     * What is checked instead:
+     * - [ActivityManager.MemoryInfo.lowMemory], the system's own signal that it is
+     *   actively reclaiming. Loading a large model under that pressure invites the
+     *   process being killed.
+     * - A modest free-RAM floor covering the KV cache and compute buffers, which *are*
+     *   anonymous allocations, unlike the weights.
+     *
+     * @return `true` if inference should be attempted.
+     */
     private suspend fun checkRam(): Boolean {
         val minFreeRamMb = appSettingsRepository.minFreeRamMb.first()
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memoryInfo)
+        val memoryInfo = readMemoryInfo()
+
+        if (memoryInfo.lowMemory) return false
+
         val availableMb = memoryInfo.availMem / BYTES_PER_MB
         return availableMb >= minFreeRamMb
     }
@@ -307,11 +350,18 @@ class CapabilityManager @Inject constructor(
      */
     private suspend fun checkStorage(): Boolean {
         val minFreeStorageMb = appSettingsRepository.minFreeStorageMb.first()
-        val externalDir = context.getExternalFilesDir(null) ?: return false
+        return availableStorageMb() >= minFreeStorageMb
+    }
+
+    /**
+     * Free space on the volume holding the app's external files directory.
+     *
+     * @return Available megabytes, or 0 if the directory is unavailable.
+     */
+    private fun availableStorageMb(): Long {
+        val externalDir = context.getExternalFilesDir(null) ?: return 0
         val statFs = StatFs(externalDir.absolutePath)
-        val availableBytes = statFs.availableBlocksLong * statFs.blockSizeLong
-        val availableMb = availableBytes / BYTES_PER_MB
-        return availableMb >= minFreeStorageMb
+        return (statFs.availableBlocksLong * statFs.blockSizeLong) / BYTES_PER_MB
     }
 
     /**

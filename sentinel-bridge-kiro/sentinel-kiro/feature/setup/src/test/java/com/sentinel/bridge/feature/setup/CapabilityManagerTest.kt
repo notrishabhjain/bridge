@@ -143,14 +143,26 @@ class CapabilityManagerTest {
     /**
      * Helper to configure ActivityManager memory info for RAM check.
      */
-    private fun stubSufficientRam(sufficient: Boolean) {
-        val availMb = if (sufficient) 4096L else 1024L
+    /**
+     * Configures reported memory.
+     *
+     * The insufficient value sits clearly below the 1024 MB default rather than exactly
+     * on it, so the test cannot be flipped by a boundary change.
+     *
+     * @param sufficient Whether free RAM should clear the threshold.
+     * @param lowMemory Whether the system reports active memory pressure.
+     */
+    private fun stubSufficientRam(sufficient: Boolean, lowMemory: Boolean = false) {
+        val availMb = if (sufficient) 4096L else 512L
         val availBytes = availMb * 1_048_576L
 
         every { activityManager.getMemoryInfo(any()) } answers {
             val memInfo = firstArg<ActivityManager.MemoryInfo>()
-            // Use reflection to set availMem since it's a public field
+            // availMem, totalMem and lowMemory are public fields, set reflectively.
             ActivityManager.MemoryInfo::class.java.getField("availMem").set(memInfo, availBytes)
+            ActivityManager.MemoryInfo::class.java.getField("totalMem")
+                .set(memInfo, 8192L * 1_048_576L)
+            ActivityManager.MemoryInfo::class.java.getField("lowMemory").set(memInfo, lowMemory)
         }
     }
 
@@ -262,6 +274,31 @@ class CapabilityManagerTest {
 
         assertFalse(report.sufficientRam)
         assertFalse(report.allPassed)
+    }
+
+    @Test
+    @DisplayName("System reports memory pressure → sufficientRam = false even with free RAM")
+    fun lowMemoryFlag_failsReportDespiteFreeRam() = runTest {
+        stubAllCapabilitiesPass()
+        // Plenty of free RAM, but the system is actively reclaiming — loading a large
+        // model now risks the process being killed.
+        stubSufficientRam(sufficient = true, lowMemory = true)
+
+        val report = capabilityManager.checkAllCapabilities()
+
+        assertFalse(report.sufficientRam)
+        assertTrue(report.lowMemory)
+    }
+
+    @Test
+    @DisplayName("Report carries measured figures so a rejection can be diagnosed")
+    fun reportCarriesMeasuredFigures() = runTest {
+        stubAllCapabilitiesPass()
+
+        val report = capabilityManager.checkAllCapabilities()
+
+        assertEquals(4096L, report.availableRamMb)
+        assertEquals(8192L, report.totalRamMb)
     }
 
     @Test

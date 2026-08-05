@@ -112,6 +112,44 @@ class ModelRepositoryTest {
         assertFalse(result)
     }
 
+    @Test
+    @DisplayName("verifyChecksum - placeholder checksum with file present → passes unverified")
+    fun verifyChecksum_placeholderChecksum_passesUnverified() = runTest {
+        val repo = createRepositoryWithChecksum("PLACEHOLDER_SHA256_CHECKSUM_REPLACE_AFTER_DOWNLOAD")
+
+        val modelFile = File(tempDir.toFile(), "test-model.gguf")
+        modelFile.writeBytes("any content".toByteArray())
+
+        assertFalse(repo.isChecksumConfigured())
+        assertTrue(repo.verifyChecksum())
+    }
+
+    @Test
+    @DisplayName("verifyChecksum - placeholder checksum but file missing → still false")
+    fun verifyChecksum_placeholderChecksumFileMissing_returnsFalse() = runTest {
+        val repo = createRepositoryWithChecksum("PLACEHOLDER_SHA256_CHECKSUM_REPLACE_AFTER_DOWNLOAD")
+
+        // A missing model must fail regardless of whether a checksum is pinned.
+        assertFalse(repo.verifyChecksum())
+    }
+
+    @Test
+    @DisplayName("isChecksumConfigured - non-hex or short values are not treated as pinned")
+    fun isChecksumConfigured_rejectsMalformedValues() = runTest {
+        assertFalse(createRepositoryWithChecksum("abc123").isChecksumConfigured())
+        assertFalse(createRepositoryWithChecksum("   ").isChecksumConfigured())
+        assertFalse(
+            createRepositoryWithChecksum(
+                "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+            ).isChecksumConfigured()
+        )
+        assertTrue(
+            createRepositoryWithChecksum(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ).isChecksumConfigured()
+        )
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // computeChecksum tests
     // ─────────────────────────────────────────────────────────────────────────

@@ -2,12 +2,12 @@ package com.sentinel.bridge.feature.pipeline.handlers
 
 import com.sentinel.bridge.core.common.logging.SentinelLogger
 import com.sentinel.bridge.core.domain.model.ErrorCategory
-import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.ai.rules.RulesEngine
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
@@ -19,53 +19,38 @@ import javax.inject.Inject
  * low-confidence tasks, and flag results for manual review based on configured rules
  * in `assets/rules/default_rules.json`.
  *
- * For MVP, constructs a stub [PipelineResult]. The real result will be loaded from
- * session state once the full pipeline integration is wired (Task 78).
+ * The post-processed result replaces the one on the session, so the store and dispatch
+ * stages persist and broadcast the filtered output rather than the raw model output.
  */
 class RunRulesPostAIHandler @Inject constructor(
     private val logger: SentinelLogger,
-    private val rulesEngine: RulesEngine
+    private val rulesEngine: RulesEngine,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.RunRulesPostAI>(maxRetries = 0) {
 
     override val stage: PipelineStage = PipelineStage.RULES_POST
 
     /**
-     * Applies post-AI rules to the pipeline result.
+     * Applies post-AI rules to the session's parsed result and writes the outcome back.
      *
-     * For MVP, constructs a stub [PipelineResult] with default values. The real
-     * result will be loaded from session state (written by the parse/validate stages)
-     * once the full pipeline integration is complete (Task 78).
-     *
-     * @param command The post-AI rules command containing the session ID.
-     * @return [CommandResult.Success] after post-processing rules are applied.
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if no
+     *         parsed result is present.
      * @throws Exception if rule evaluation fails, triggering failure.
      */
     override suspend fun doExecute(command: PipelineCommand.RunRulesPostAI): CommandResult {
+        val pipelineResult = sessionStore.requireResult(command.sessionId)
+
         logger.logInfo(command.sessionId, stage.name, "Evaluating post-AI rules")
 
-        // Stub PipelineResult — real value will come from session state
-        val pipelineResult = PipelineResult(
-            sessionId = command.sessionId,
-            summary = "",
-            confidence = 0.0f,
-            tasks = emptyList(),
-            calendarEvents = emptyList(),
-            followUps = emptyList(),
-            people = emptyList(),
-            projects = emptyList(),
-            processingTimeMs = 0L,
-            model = "",
-            promptVersion = "",
-            pipelineVersion = ""
-        )
-
         val processedResult = rulesEngine.postProcess(pipelineResult)
+
+        sessionStore.update(command.sessionId) { it.copy(result = processedResult) }
 
         logger.logInfo(
             command.sessionId,
             stage.name,
-            "Post-AI rules applied (tasks=${processedResult.tasks.size}, " +
-                "confidence=${processedResult.confidence})"
+            "Post-AI rules applied (tasks=${pipelineResult.tasks.size} → " +
+                "${processedResult.tasks.size}, confidence=${processedResult.confidence})"
         )
 
         return CommandResult.Success(command.sessionId)

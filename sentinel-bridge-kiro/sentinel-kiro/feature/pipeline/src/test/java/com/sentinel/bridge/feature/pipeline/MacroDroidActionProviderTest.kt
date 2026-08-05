@@ -3,6 +3,7 @@ package com.sentinel.bridge.feature.pipeline
 import android.content.Context
 import android.content.Intent
 import com.sentinel.bridge.core.domain.model.ActionOutcome
+import com.sentinel.bridge.core.domain.model.CalendarEvent
 import com.sentinel.bridge.core.domain.model.EventSource
 import com.sentinel.bridge.core.domain.model.ExtractedTask
 import com.sentinel.bridge.core.domain.model.InputContext
@@ -35,6 +36,7 @@ class MacroDroidActionProviderTest {
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Boolean>()) } returns mockk()
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Float>()) } returns mockk()
         every { anyConstructed<Intent>().putExtra(any<String>(), any<Long>()) } returns mockk()
+        every { anyConstructed<Intent>().putExtra(any<String>(), any<Int>()) } returns mockk()
         context = mockk(relaxed = true)
         provider = MacroDroidActionProvider(context)
     }
@@ -105,6 +107,72 @@ class MacroDroidActionProviderTest {
         verify(exactly = 1) { context.sendBroadcast(any()) }
         // Verify no non-null macroInvocationId extra was added
         verify(exactly = 0) { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_MACRO_INVOCATION_ID, any<String>()) }
+    }
+
+    @Test
+    fun `dispatch emits per-task extras a MacroDroid action can read`() = runTest {
+        val result = createPipelineResult(sessionId = "session-tasks")
+        val inputContext = createInputContext(sessionId = "session-tasks")
+
+        provider.dispatch(result, inputContext)
+
+        // createPipelineResult() supplies exactly one task, with no due date.
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_TASK_COUNT, 1) }
+        verify { anyConstructed<Intent>().putExtra("task_0_title", "Follow up with client") }
+        verify { anyConstructed<Intent>().putExtra("task_0_notes", "Schedule a meeting next week") }
+        verify { anyConstructed<Intent>().putExtra("task_0_priority", "HIGH") }
+        verify { anyConstructed<Intent>().putExtra(eq(MacroDroidActionProvider.EXTRA_TASKS_JSON), any<String>()) }
+
+        // No due date means no due extras at all, so a macro can tell "none" from a real date.
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("task_0_due"), any<String>()) }
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("task_0_dueMillis"), any<Long>()) }
+    }
+
+    @Test
+    fun `dispatch emits calendar extras with a derived end time`() = runTest {
+        val result = createPipelineResult(sessionId = "session-events").copy(
+            calendarEvents = listOf(
+                CalendarEvent(
+                    id = "e1",
+                    title = "Renewal call",
+                    dateTime = "2026-03-14T15:30:00",
+                    description = null
+                )
+            )
+        )
+        val inputContext = createInputContext(sessionId = "session-events")
+
+        val beginMillis = IsoDateTimes.toEpochMillis("2026-03-14T15:30:00")!!
+
+        provider.dispatch(result, inputContext)
+
+        verify { anyConstructed<Intent>().putExtra(MacroDroidActionProvider.EXTRA_EVENT_COUNT, 1) }
+        verify { anyConstructed<Intent>().putExtra("event_0_title", "Renewal call") }
+        verify { anyConstructed<Intent>().putExtra("event_0_begin", "2026-03-14T15:30:00") }
+        verify { anyConstructed<Intent>().putExtra("event_0_beginMillis", beginMillis) }
+        verify {
+            anyConstructed<Intent>().putExtra(
+                "event_0_endMillis",
+                beginMillis + IsoDateTimes.DEFAULT_EVENT_DURATION_MS
+            )
+        }
+    }
+
+    @Test
+    fun `dispatch omits event millis when the model returned an unparseable time`() = runTest {
+        val result = createPipelineResult(sessionId = "session-bad-date").copy(
+            calendarEvents = listOf(
+                CalendarEvent(id = "e1", title = "Sometime", dateTime = "next Tuesday", description = null)
+            )
+        )
+        val inputContext = createInputContext(sessionId = "session-bad-date")
+
+        provider.dispatch(result, inputContext)
+
+        // Broadcasting a wrong start time would create a calendar entry at the wrong moment.
+        verify { anyConstructed<Intent>().putExtra("event_0_begin", "next Tuesday") }
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("event_0_beginMillis"), any<Long>()) }
+        verify(exactly = 0) { anyConstructed<Intent>().putExtra(eq("event_0_endMillis"), any<Long>()) }
     }
 
     @Test

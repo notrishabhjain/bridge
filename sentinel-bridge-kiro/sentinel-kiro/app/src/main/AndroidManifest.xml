@@ -54,6 +54,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Manual transcript entry. Exposed from the launcher so the analysis half of
+             the pipeline can be exercised while the Recorder automation stages are
+             still being built. -->
+        <activity
+            android:name="com.sentinel.bridge.analyze.AnalyzeTextActivity"
+            android:exported="true"
+            android:label="Analyse Text">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name="com.sentinel.bridge.feature.notification.SentinelNotificationListener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"

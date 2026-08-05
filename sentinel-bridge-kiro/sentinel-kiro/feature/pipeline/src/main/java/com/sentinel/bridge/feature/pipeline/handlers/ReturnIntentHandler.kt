@@ -6,19 +6,22 @@ import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Handles returning the pipeline result Intent to MacroDroid.
+ * Terminal stage: releases the run's in-memory working state.
  *
- * Once real business logic is implemented, this handler will broadcast
- * either PIPELINE_COMPLETE or PIPELINE_FAILED with the required extras
- * (sessionId, summary, error details) back to MacroDroid.
+ * The result was already persisted by the store stage and broadcast by the dispatch
+ * stage, so nothing here is load-bearing for the caller. Its job is to drop the
+ * session's transcript, prompt, and model output, which would otherwise be retained
+ * for the process lifetime.
  */
 class ReturnIntentHandler @Inject constructor(
-    private val logger: SentinelLogger
+    private val logger: SentinelLogger,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.ReturnIntent>(maxRetries = 0) {
 
     override val stage: PipelineStage = PipelineStage.RETURN_INTENT
@@ -26,7 +29,8 @@ class ReturnIntentHandler @Inject constructor(
     override suspend fun doExecute(
         command: PipelineCommand.ReturnIntent
     ): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Executing ${stage.name}")
+        sessionStore.clear(command.sessionId)
+        logger.logInfo(command.sessionId, stage.name, "Pipeline finished, session state released")
         return CommandResult.Success(command.sessionId)
     }
 

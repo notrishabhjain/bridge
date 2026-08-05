@@ -87,6 +87,7 @@ class PipelineOrchestratorTest {
             pipelineSessionDao = pipelineSessionDao,
             logRepository = logRepository,
             appSettingsRepository = appSettingsRepository,
+            sessionStore = PipelineSessionStore(),
             logger = logger
         )
     }

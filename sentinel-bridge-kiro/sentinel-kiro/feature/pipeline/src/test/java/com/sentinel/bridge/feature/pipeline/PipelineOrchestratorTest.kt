@@ -13,6 +13,7 @@ import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import com.sentinel.bridge.feature.setup.CapabilityManager
 import com.sentinel.bridge.feature.setup.CapabilityReport
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -93,6 +94,7 @@ class PipelineOrchestratorTest {
     @AfterEach
     fun tearDown() {
         unmockkStatic(WorkManager::class)
+        clearAllMocks()
     }
 
     private fun allPassedCapabilityReport() = CapabilityReport(
@@ -338,7 +340,12 @@ class PipelineOrchestratorTest {
             // Session was persisted at INFERENCE stage (simulating a resume after crash)
             val session = createSessionEntity(stage = PipelineStage.INFERENCE.name)
             coEvery { pipelineSessionDao.getById(testSessionId) } returns session
-            coEvery { commandBus.dispatch(any()) } returns CommandResult.Success(testSessionId)
+
+            val dispatchedCommands = mutableListOf<PipelineCommand>()
+            coEvery { commandBus.dispatch(any()) } answers {
+                dispatchedCommands.add(firstArg())
+                CommandResult.Success(testSessionId)
+            }
 
             val result = orchestrator.resumePipeline(testSessionId)
 
@@ -347,23 +354,23 @@ class PipelineOrchestratorTest {
             // The pipeline should start from INFERENCE onward.
             // Stages from INFERENCE: INFERENCE, PARSE_RESPONSE, VALIDATE_JSON,
             // RULES_POST, STORE_RESULT, DISPATCH_ACTION, RETURN_INTENT = 7 commands
-            coVerify(exactly = 7) { commandBus.dispatch(any()) }
+            assertEquals(7, dispatchedCommands.size)
 
             // Verify earlier stages were NOT executed
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.OpenRecorder>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.OpenRecording>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.ClickShowText>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.SelectLanguage>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.WaitForTranscription>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.ExtractTranscript>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.RunPreprocessor>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.RunRulesPreAI>()) }
-            coVerify(exactly = 0) { commandBus.dispatch(any<PipelineCommand.BuildPrompt>()) }
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.OpenRecorder })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.OpenRecording })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.ClickShowText })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.SelectLanguage })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.WaitForTranscription })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.ExtractTranscript })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.RunPreprocessor })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.RunRulesPreAI })
+            assertFalse(dispatchedCommands.any { it is PipelineCommand.BuildPrompt })
 
             // Verify INFERENCE and later commands WERE executed
-            coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.RunInference>()) }
-            coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.ParseResponse>()) }
-            coVerify(exactly = 1) { commandBus.dispatch(any<PipelineCommand.ReturnIntent>()) }
+            assertTrue(dispatchedCommands.any { it is PipelineCommand.RunInference })
+            assertTrue(dispatchedCommands.any { it is PipelineCommand.ParseResponse })
+            assertTrue(dispatchedCommands.any { it is PipelineCommand.ReturnIntent })
         }
     }
 }

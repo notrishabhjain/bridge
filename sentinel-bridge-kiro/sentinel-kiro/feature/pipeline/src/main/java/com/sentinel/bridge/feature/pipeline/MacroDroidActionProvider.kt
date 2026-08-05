@@ -60,7 +60,7 @@ class MacroDroidActionProvider @Inject constructor(
             putExtra(EXTRA_SUMMARY, result.summary)
             putExtra(EXTRA_CONFIDENCE, result.confidence)
             putExtra(EXTRA_PROCESSING_TIME_MS, result.processingTimeMs)
-            putExtra(EXTRA_MACRO_INVOCATION_ID, context.metadata["macroInvocationId"])
+            context.metadata["macroInvocationId"]?.let { putExtra(EXTRA_MACRO_INVOCATION_ID, it) }
         }
         this.context.sendBroadcast(intent)
         return ActionOutcome.Success(actionId = id)
@@ -96,7 +96,7 @@ class MacroDroidActionProvider @Inject constructor(
             putExtra(EXTRA_ERROR_CODE, errorCode)
             putExtra(EXTRA_ERROR_STAGE, errorStage)
             putExtra(EXTRA_RETRYABLE, retryable)
-            putExtra(EXTRA_MACRO_INVOCATION_ID, macroInvocationId)
+            macroInvocationId?.let { putExtra(EXTRA_MACRO_INVOCATION_ID, it) }
         }
         context.sendBroadcast(intent)
     }

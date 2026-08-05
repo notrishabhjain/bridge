@@ -30,7 +30,7 @@ class CommandBusTest {
     @Test
     fun `dispatch routes command to correct handler and returns success`() = runTest {
         val handler = FakeHandler(CommandResult.Success("session-1"))
-        val handlers = mapOf<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>(
+        val handlers = mapOf<Class<*>, CommandHandler<PipelineCommand>>(
             PipelineCommand.OpenRecorder::class.java to handler
         )
         commandBus = CommandBus(handlers)
@@ -44,7 +44,7 @@ class CommandBusTest {
 
     @Test
     fun `dispatch returns failure when no handler is registered`() = runTest {
-        val handlers = emptyMap<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>()
+        val handlers = emptyMap<Class<*>, CommandHandler<PipelineCommand>>()
         commandBus = CommandBus(handlers)
 
         val result = commandBus.dispatch(PipelineCommand.OpenRecorder("session-2"))
@@ -63,7 +63,7 @@ class CommandBusTest {
         val handler1 = FakeHandler(CommandResult.Success("s1")) { executionOrder.add("first") }
         val handler2 = FakeHandler(CommandResult.Success("s2")) { executionOrder.add("second") }
 
-        val handlers = mapOf<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>(
+        val handlers = mapOf<Class<*>, CommandHandler<PipelineCommand>>(
             PipelineCommand.OpenRecorder::class.java to handler1,
             PipelineCommand.OpenRecording::class.java to handler2
         )
@@ -90,7 +90,7 @@ class CommandBusTest {
             sessionId = "session-3"
         )
         val handler = FakeHandler(CommandResult.Failure(error))
-        val handlers = mapOf<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>(
+        val handlers = mapOf<Class<*>, CommandHandler<PipelineCommand>>(
             PipelineCommand.OpenRecorder::class.java to handler
         )
         commandBus = CommandBus(handlers)
@@ -106,7 +106,7 @@ class CommandBusTest {
         val openRecorderHandler = FakeHandler(CommandResult.Success("s1"))
         val extractHandler = FakeHandler(CommandResult.Success("s2"))
 
-        val handlers = mapOf<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>(
+        val handlers = mapOf<Class<*>, CommandHandler<PipelineCommand>>(
             PipelineCommand.OpenRecorder::class.java to openRecorderHandler,
             PipelineCommand.ExtractTranscript::class.java to extractHandler
         )
@@ -122,7 +122,7 @@ class CommandBusTest {
     @Test
     fun `dispatch returns skipped result from handler`() = runTest {
         val handler = FakeHandler(CommandResult.Skipped("session-4", "Pre-AI rule matched IGNORE"))
-        val handlers = mapOf<Class<out PipelineCommand>, CommandHandler<PipelineCommand>>(
+        val handlers = mapOf<Class<*>, CommandHandler<PipelineCommand>>(
             PipelineCommand.RunRulesPreAI::class.java to handler
         )
         commandBus = CommandBus(handlers)

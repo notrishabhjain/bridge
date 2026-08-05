@@ -14,6 +14,8 @@ env:
   JAVA_VERSION: '17'
   # Android project lives one level below repo root
   PROJECT_DIR: sentinel-bridge-kiro/sentinel-kiro
+  # Pinned llama.cpp release — update together with native_bridge.cpp API changes
+  LLAMA_CPP_TAG: b10269
 
 # ---------------------------------------------------------------------------
 # Job 1: Build debug APK + run all quality gates
@@ -36,20 +38,21 @@ jobs:
           fetch-depth: 0
 
       # llama.cpp is NOT a tracked submodule at repo root — clone it fresh.
-      # Cache keyed on .gitmodules so the cache busts when the URL/pin changes.
+      # Cache keyed on the pinned tag so the cache busts when LLAMA_CPP_TAG changes.
       - name: Cache llama.cpp source
         id: llama-cache
         uses: actions/cache@v4
         with:
           path: ${{ env.PROJECT_DIR }}/native/third_party/llama.cpp
-          key: llama-cpp-src-${{ hashFiles(format('{0}/.gitmodules', env.PROJECT_DIR)) }}
+          key: llama-cpp-src-${{ env.LLAMA_CPP_TAG }}
           restore-keys: llama-cpp-src-
 
-      - name: Clone llama.cpp (shallow, if not cached)
+      - name: Clone llama.cpp (pinned ${{ env.LLAMA_CPP_TAG }}, if not cached)
         if: steps.llama-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf native/third_party/llama.cpp
-          git clone --depth 1 https://github.com/ggerganov/llama.cpp.git \
+          git clone --depth 1 --branch ${{ env.LLAMA_CPP_TAG }} \
+              https://github.com/ggerganov/llama.cpp.git \
               native/third_party/llama.cpp
 
       # ── Toolchain ─────────────────────────────────────────────────────────
@@ -172,14 +175,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.PROJECT_DIR }}/native/third_party/llama.cpp
-          key: llama-cpp-src-${{ hashFiles(format('{0}/.gitmodules', env.PROJECT_DIR)) }}
+          key: llama-cpp-src-${{ env.LLAMA_CPP_TAG }}
           restore-keys: llama-cpp-src-
 
-      - name: Clone llama.cpp (shallow, if not cached)
+      - name: Clone llama.cpp (pinned ${{ env.LLAMA_CPP_TAG }}, if not cached)
         if: steps.llama-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf native/third_party/llama.cpp
-          git clone --depth 1 https://github.com/ggerganov/llama.cpp.git \
+          git clone --depth 1 --branch ${{ env.LLAMA_CPP_TAG }} \
+              https://github.com/ggerganov/llama.cpp.git \
               native/third_party/llama.cpp
 
       # ── Toolchain ─────────────────────────────────────────────────────────

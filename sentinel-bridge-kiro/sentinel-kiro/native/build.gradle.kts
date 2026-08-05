@@ -7,6 +7,8 @@ android {
     namespace = "com.sentinel.bridge.native_"
     compileSdk = 35
 
+    ndkVersion = "26.1.10909125"
+
     defaultConfig {
         minSdk = 26
 

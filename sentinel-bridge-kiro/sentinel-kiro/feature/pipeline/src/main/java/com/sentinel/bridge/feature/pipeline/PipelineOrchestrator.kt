@@ -18,6 +18,7 @@ import com.sentinel.bridge.feature.setup.CapabilityManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,6 +45,7 @@ import javax.inject.Singleton
  * @property pipelineSessionDao DAO for direct stage-level session updates.
  * @property logRepository Repository for session insert with rotation.
  * @property appSettingsRepository DataStore-backed settings (e.g. transcription timeout).
+ * @property sessionStore Carrier for per-run state handed between stages.
  * @property logger Structured logger for pipeline events.
  */
 @Singleton
@@ -54,10 +56,14 @@ class PipelineOrchestrator @Inject constructor(
     private val pipelineSessionDao: PipelineSessionDao,
     private val logRepository: LogRepository,
     private val appSettingsRepository: AppSettingsRepository,
+    private val sessionStore: PipelineSessionStore,
     private val logger: SentinelLogger
 ) {
 
     companion object {
+        /** Source recorded for runs started from pasted text rather than a call. */
+        const val MANUAL_SOURCE = "MANUAL"
+
         /** Unique work name for WorkManager. Only one pipeline runs at a time. */
         const val WORK_NAME = "sentinel_pipeline"
 
@@ -141,6 +147,110 @@ class PipelineOrchestrator @Inject constructor(
             .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.KEEP, workRequest)
 
         return true
+    }
+
+    /**
+     * Runs the analysis half of the pipeline over text supplied directly, skipping the
+     * recorder-automation stages.
+     *
+     * The stages that drive the Recorder UI exist to obtain a transcript. When the
+     * caller already has one, those stages have nothing to do, so the run is seeded at
+     * [PipelineStage.BUILD_PROMPT] and everything from prompt building through dispatch
+     * executes normally.
+     *
+     * Capability requirements differ accordingly: the model must be present and the
+     * device must have headroom to run it, but accessibility and the Recorder are not
+     * consulted, since nothing here touches them.
+     *
+     * Unlike [startPipeline] this executes inline and returns the outcome, rather than
+     * enqueuing work — the caller is a person waiting on a screen for the result.
+     *
+     * @param transcript Conversation text to analyse.
+     * @param language Language of [transcript], used when rendering the prompt.
+     * @return The terminal [CommandResult] of the run.
+     */
+    suspend fun analyzeText(transcript: String, language: String): CommandResult {
+        val sessionId = UUID.randomUUID().toString()
+
+        if (transcript.isBlank()) {
+            return CommandResult.Failure(
+                SentinelError(
+                    code = "ERR_EMPTY_TRANSCRIPT",
+                    category = ErrorCategory.SYSTEM,
+                    message = "There is no text to analyse.",
+                    stage = PipelineStage.BUILD_PROMPT,
+                    retryable = false,
+                    timestamp = Instant.now(),
+                    sessionId = sessionId
+                )
+            )
+        }
+
+        val report = capabilityManager.checkAllCapabilities()
+        if (!report.modelValid || !report.sufficientRam || !report.sufficientStorage) {
+            logger.logError(
+                sessionId = sessionId,
+                stage = PipelineStage.CAPABILITY_CHECK.name,
+                message = "Manual analysis blocked: model=${report.modelValid}, " +
+                    "ram=${report.sufficientRam}, storage=${report.sufficientStorage}"
+            )
+            return CommandResult.Failure(
+                SentinelError(
+                    code = "ERR_CAPABILITY_CHECK",
+                    category = ErrorCategory.SYSTEM,
+                    message = buildString {
+                        append("Cannot run the model: ")
+                        val problems = buildList {
+                            if (!report.modelValid) add("the model file is missing")
+                            if (!report.sufficientRam) add("not enough free memory")
+                            if (!report.sufficientStorage) add("not enough free storage")
+                        }
+                        append(problems.joinToString(", "))
+                    },
+                    stage = PipelineStage.CAPABILITY_CHECK,
+                    retryable = true,
+                    timestamp = Instant.now(),
+                    sessionId = sessionId
+                )
+            )
+        }
+
+        val now = Instant.now().toEpochMilli()
+        logRepository.insertWithRotation(
+            PipelineSessionEntity(
+                sessionId = sessionId,
+                source = MANUAL_SOURCE,
+                currentStage = PipelineStage.BUILD_PROMPT.name,
+                language = language,
+                callerName = null,
+                phoneNumber = null,
+                callDuration = null,
+                macroInvocationId = null,
+                createdAt = now,
+                updatedAt = now,
+                completedAt = null,
+                errorCode = null,
+                errorCategory = null,
+                errorMessage = null,
+                retryCount = 0
+            )
+        )
+
+        sessionStore.start(sessionId, transcript, language)
+
+        logger.logInfo(
+            sessionId = sessionId,
+            stage = PipelineStage.BUILD_PROMPT.name,
+            message = "Manual analysis started (${transcript.length} chars, language=$language)"
+        )
+
+        return try {
+            resumePipeline(sessionId)
+        } finally {
+            // resumePipeline only clears state on the happy path via RETURN_INTENT;
+            // a failure part-way through would otherwise strand it in memory.
+            sessionStore.clear(sessionId)
+        }
     }
 
     /**

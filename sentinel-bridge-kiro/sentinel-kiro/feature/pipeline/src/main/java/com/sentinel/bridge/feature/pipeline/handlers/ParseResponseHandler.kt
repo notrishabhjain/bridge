@@ -7,45 +7,64 @@ import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.ai.validation.ResponseParser
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Handles parsing the raw LLM output string into Kotlin domain objects using [ResponseParser].
+ * Parses the raw LLM output into Kotlin domain objects using [ResponseParser].
  *
  * Strips markdown fences, extracts the JSON payload, and deserializes it into a
- * [PipelineResult]. For MVP, the raw response is a placeholder — the real response
- * will be retrieved from session state once full pipeline integration is wired (Task 78).
+ * `PipelineResult`, which is stored on the session for the stages that follow.
  *
- * Throws [ResponseParseException] if parsing fails, which is caught by the retry policy
+ * Throws `ResponseParseException` if parsing fails, which is caught by the retry policy
  * and converted to a [CommandResult.Failure].
  */
 class ParseResponseHandler @Inject constructor(
     private val logger: SentinelLogger,
-    private val responseParser: ResponseParser
+    private val responseParser: ResponseParser,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.ParseResponse>(maxRetries = 0) {
 
     override val stage: PipelineStage = PipelineStage.PARSE_RESPONSE
 
     /**
-     * Parses the raw LLM response into structured domain objects.
+     * Parses the model's raw output into structured domain objects.
      *
-     * For MVP, uses a placeholder raw response. The real response will be loaded
-     * from session state (written by [RunInferenceHandler]) once the full pipeline
-     * integration is complete (Task 78).
+     * Provenance fields — session ID, processing time, model, and version identifiers
+     * — are overwritten with values taken from the run itself rather than trusted from
+     * the model, which has no reliable knowledge of them.
      *
-     * @param command The parse-response command containing the session ID.
-     * @return [CommandResult.Success] after the response is parsed successfully.
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if the
+     *         session holds no model output.
      * @throws ResponseParseException if no valid JSON object is found in the response.
      */
     override suspend fun doExecute(command: PipelineCommand.ParseResponse): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Parsing LLM response")
+        val rawResponse = sessionStore.requireRawResponse(command.sessionId)
+        val state = sessionStore.get(command.sessionId)
 
-        // Stub raw response — real value will come from session state
-        val rawResponse = ""
+        logger.logInfo(
+            command.sessionId,
+            stage.name,
+            "Parsing LLM response (${rawResponse.length} chars)"
+        )
 
-        val pipelineResult = responseParser.parse(rawResponse)
+        val parsed = responseParser.parse(rawResponse)
+
+        val elapsedMs = state?.startedAtMs
+            ?.let { System.currentTimeMillis() - it }
+            ?: 0L
+
+        val pipelineResult = parsed.copy(
+            sessionId = command.sessionId,
+            processingTimeMs = elapsedMs,
+            model = state?.model.orEmpty(),
+            promptVersion = state?.promptVersion.orEmpty(),
+            pipelineVersion = PIPELINE_VERSION
+        )
+
+        sessionStore.update(command.sessionId) { it.copy(result = pipelineResult) }
 
         logger.logInfo(
             command.sessionId,
@@ -68,5 +87,10 @@ class ParseResponseHandler @Inject constructor(
             timestamp = Instant.now(),
             sessionId = command.sessionId
         )
+    }
+
+    private companion object {
+        /** Version of the pipeline definition that produced the result. */
+        const val PIPELINE_VERSION = "1"
     }
 }

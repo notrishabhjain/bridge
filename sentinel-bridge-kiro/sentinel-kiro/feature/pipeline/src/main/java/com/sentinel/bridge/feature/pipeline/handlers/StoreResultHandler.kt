@@ -1,32 +1,71 @@
 package com.sentinel.bridge.feature.pipeline.handlers
 
 import com.sentinel.bridge.core.common.logging.SentinelLogger
+import com.sentinel.bridge.core.data.db.dao.PipelineResultDao
+import com.sentinel.bridge.core.data.db.entity.PipelineResultEntity
 import com.sentinel.bridge.core.domain.model.ErrorCategory
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineResultJson
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Handles persisting the validated pipeline result to Room and file storage.
+ * Persists the parsed pipeline result to Room.
  *
- * Once real business logic is implemented, this handler will write the
- * final PipelineResult entity to Room and save the transcript text
- * to getExternalFilesDir("transcripts")/<sessionId>.txt.
+ * Runs before the dispatch stage broadcasts the result, so anything MacroDroid
+ * receives is already retrievable from the database. Collections are stored as JSON
+ * strings to match [PipelineResultEntity].
  */
 class StoreResultHandler @Inject constructor(
-    private val logger: SentinelLogger
+    private val logger: SentinelLogger,
+    private val pipelineResultDao: PipelineResultDao,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.StoreResult>(maxRetries = 1) {
 
     override val stage: PipelineStage = PipelineStage.STORE_RESULT
 
+    /**
+     * Writes the session's parsed result to [PipelineResultDao].
+     *
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if no
+     *         parsed result is present.
+     */
     override suspend fun doExecute(
         command: PipelineCommand.StoreResult
     ): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Executing ${stage.name}")
+        val result = sessionStore.requireResult(command.sessionId)
+
+        logger.logInfo(
+            command.sessionId,
+            stage.name,
+            "Persisting result (tasks=${result.tasks.size}, events=${result.calendarEvents.size})"
+        )
+
+        pipelineResultDao.insert(
+            PipelineResultEntity(
+                sessionId = command.sessionId,
+                summary = result.summary,
+                confidence = result.confidence,
+                tasksJson = PipelineResultJson.tasks(result.tasks),
+                calendarEventsJson = PipelineResultJson.calendarEvents(result.calendarEvents),
+                followUpsJson = PipelineResultJson.followUps(result.followUps),
+                peopleJson = PipelineResultJson.strings(result.people),
+                projectsJson = PipelineResultJson.strings(result.projects),
+                processingTimeMs = result.processingTimeMs,
+                model = result.model,
+                promptVersion = result.promptVersion,
+                pipelineVersion = result.pipelineVersion,
+                createdAt = Instant.now().toEpochMilli()
+            )
+        )
+
+        logger.logInfo(command.sessionId, stage.name, "Result persisted")
+
         return CommandResult.Success(command.sessionId)
     }
 

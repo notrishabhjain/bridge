@@ -8,6 +8,7 @@ import com.sentinel.bridge.feature.ai.validation.JSONValidator
 import com.sentinel.bridge.feature.ai.validation.ValidationResult
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
@@ -25,27 +26,32 @@ import javax.inject.Inject
  */
 open class ValidateJsonHandler @Inject constructor(
     private val logger: SentinelLogger,
-    private val jsonValidator: JSONValidator
+    private val jsonValidator: JSONValidator,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.ValidateJson>(maxRetries = 1) {
 
     override val stage: PipelineStage = PipelineStage.VALIDATE_JSON
 
     /**
-     * Validates the raw JSON string from the LLM output.
+     * Validates the model's raw JSON output and confirms the parse stage produced a
+     * usable result.
      *
-     * For MVP, the raw JSON is a placeholder. The real JSON will be loaded from
-     * session state (written by the parse stage) once the full pipeline integration
-     * is complete (Task 78).
+     * This stage runs after parsing, so a structural problem would already have
+     * surfaced there. Validating here still earns its place: it records which repairs
+     * the output needed, which is the signal that the prompt or model is drifting.
      *
-     * @param command The validate-json command containing the session ID.
      * @return [CommandResult.Success] if JSON is valid or successfully repaired.
      * @throws JsonValidationException if validation fails after all repair attempts.
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if the
+     *         session holds no model output or no parsed result.
      */
     override suspend fun doExecute(command: PipelineCommand.ValidateJson): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Validating JSON output")
+        val rawJson = sessionStore.requireRawResponse(command.sessionId)
 
-        // Stub raw JSON — real value will come from session state
-        val rawJson = "{}"
+        // Fails loudly if the parse stage did not store a result.
+        sessionStore.requireResult(command.sessionId)
+
+        logger.logInfo(command.sessionId, stage.name, "Validating JSON output")
 
         return when (val result = jsonValidator.validate(rawJson)) {
             is ValidationResult.Valid -> {

@@ -4,64 +4,76 @@ import com.sentinel.bridge.core.common.logging.SentinelLogger
 import com.sentinel.bridge.core.domain.model.ErrorCategory
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
+import com.sentinel.bridge.feature.ai.prompt.OutputSchemas
 import com.sentinel.bridge.feature.ai.prompt.PromptRenderer
 import com.sentinel.bridge.feature.ai.prompt.PromptRepository
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * Handles building the inference prompt from a versioned template and session variables.
+ * Renders the inference prompt from the session's transcript and a versioned template.
  *
- * Loads the prompt template via [PromptRepository], constructs a variable map (stubbed
- * for MVP), and renders the final prompt string using [PromptRenderer].
- *
- * For MVP, since handlers are stateless and communicate via Room session state, the
- * rendered prompt is logged for debugging. The full data-flow between handlers (passing
- * the rendered prompt to [RunInferenceHandler]) will be wired in Task 78.
+ * Reads the transcript the extraction stage (or manual entry) produced, renders
+ * `task_extraction_v1.md` around it, and stores the finished prompt on the session
+ * for the inference stage to pick up.
  */
 class BuildPromptHandler @Inject constructor(
     private val logger: SentinelLogger,
     private val promptRepository: PromptRepository,
-    private val promptRenderer: PromptRenderer
+    private val promptRenderer: PromptRenderer,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.BuildPrompt>(maxRetries = 0) {
 
     override val stage: PipelineStage = PipelineStage.BUILD_PROMPT
 
     /**
-     * Loads the prompt template, builds the variable map, and renders the final prompt.
+     * Renders the prompt and records it on the session.
      *
-     * For MVP, uses a stub variable map with placeholder values. The real variables
-     * will be sourced from the session's [InputContext] once full pipeline integration
-     * is complete (Task 78).
-     *
-     * @param command The build-prompt command containing the session ID.
-     * @return [CommandResult.Success] after the prompt is rendered successfully.
-     * @throws Exception if template loading or rendering fails, triggering failure.
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if no
+     *         transcript is present — rendering a prompt around an empty transcript
+     *         would send the model an analysis request with nothing to analyse.
      */
     override suspend fun doExecute(command: PipelineCommand.BuildPrompt): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Loading prompt template")
-
-        val template = promptRepository.loadTemplate(TEMPLATE_FILE_NAME)
-
-        // Stub variables — real values come from session's InputContext
-        val variables = mapOf(
-            "transcript" to "",
-            "language" to "en",
-            "sessionId" to command.sessionId,
-            "conversationMemory" to "",
-            "userPreferences" to "",
-            "schema" to template.schema
-        )
-
-        val renderedPrompt = promptRenderer.render(template, variables)
+        val transcript = sessionStore.requireTranscript(command.sessionId)
+        val state = sessionStore.get(command.sessionId)
 
         logger.logInfo(
             command.sessionId,
             stage.name,
-            "Prompt rendered successfully (template=${template.name}, version=${template.version}, " +
+            "Building prompt (transcript=${transcript.length} chars)"
+        )
+
+        val template = promptRepository.loadTemplate(TEMPLATE_FILE_NAME)
+
+        val variables = mapOf(
+            "transcript" to transcript,
+            "language" to (state?.language ?: DEFAULT_LANGUAGE),
+            "sessionId" to command.sessionId,
+            "currentDate" to LocalDate.now().toString(),
+            "conversationMemory" to "",
+            "userPreferences" to "",
+            "schema" to OutputSchemas.forName(template.schema)
+        )
+
+        val renderedPrompt = promptRenderer.render(template, variables)
+
+        sessionStore.update(command.sessionId) {
+            it.copy(
+                renderedPrompt = renderedPrompt,
+                promptVersion = "${template.name}@${template.version}",
+                model = template.model
+            )
+        }
+
+        logger.logInfo(
+            command.sessionId,
+            stage.name,
+            "Prompt rendered (template=${template.name}, version=${template.version}, " +
                 "length=${renderedPrompt.length} chars)"
         )
 
@@ -83,5 +95,8 @@ class BuildPromptHandler @Inject constructor(
     private companion object {
         /** Default prompt template file used for task extraction. */
         const val TEMPLATE_FILE_NAME = "task_extraction_v1.md"
+
+        /** Language assumed when the session did not record one. */
+        const val DEFAULT_LANGUAGE = "en"
     }
 }

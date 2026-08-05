@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import com.sentinel.bridge.core.domain.interfaces.ActionProvider
 import com.sentinel.bridge.core.domain.model.ActionOutcome
+import com.sentinel.bridge.core.domain.model.CalendarEvent
 import com.sentinel.bridge.core.domain.model.EventSource
+import com.sentinel.bridge.core.domain.model.ExtractedTask
 import com.sentinel.bridge.core.domain.model.InputContext
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -61,9 +63,64 @@ class MacroDroidActionProvider @Inject constructor(
             putExtra(EXTRA_CONFIDENCE, result.confidence)
             putExtra(EXTRA_PROCESSING_TIME_MS, result.processingTimeMs)
             context.metadata["macroInvocationId"]?.let { putExtra(EXTRA_MACRO_INVOCATION_ID, it) }
+
+            putExtra(EXTRA_TASKS_JSON, PipelineResultJson.tasks(result.tasks))
+            putExtra(EXTRA_EVENTS_JSON, PipelineResultJson.calendarEvents(result.calendarEvents))
+            putTaskExtras(result.tasks)
+            putEventExtras(result.calendarEvents)
         }
         this.context.sendBroadcast(intent)
         return ActionOutcome.Success(actionId = id)
+    }
+
+    /**
+     * Adds one flattened group of extras per task, shaped for a MacroDroid action that
+     * creates a Google Task.
+     *
+     * MacroDroid cannot index into a JSON array in a plain action, so each task is also
+     * emitted as numbered scalar extras that a macro loop can read directly using
+     * `%task_0_title%` and friends. The JSON array is still provided for macros that do
+     * parse it.
+     *
+     * `dueMillis` is omitted rather than defaulted when a due date is absent or
+     * unparseable, so a macro can distinguish "no due date" from a real time.
+     */
+    private fun Intent.putTaskExtras(tasks: List<ExtractedTask>) {
+        putExtra(EXTRA_TASK_COUNT, tasks.size)
+        tasks.forEachIndexed { index, task ->
+            putExtra("${TASK_PREFIX}${index}_title", task.title)
+            putExtra("${TASK_PREFIX}${index}_notes", task.description)
+            putExtra("${TASK_PREFIX}${index}_priority", task.priority.name)
+            task.dueDate?.let { putExtra("${TASK_PREFIX}${index}_due", it) }
+            IsoDateTimes.toEpochMillis(task.dueDate)?.let {
+                putExtra("${TASK_PREFIX}${index}_dueMillis", it)
+            }
+        }
+    }
+
+    /**
+     * Adds one flattened group of extras per calendar event, shaped for a MacroDroid
+     * action that creates a Google Calendar event.
+     *
+     * Both an ISO string and an epoch-millis form are emitted because the calendar
+     * insert intent takes millis while the ISO text is what a human reads in a
+     * notification. An end time is derived by adding [IsoDateTimes.DEFAULT_EVENT_DURATION_MS],
+     * since the extraction schema captures only a start.
+     */
+    private fun Intent.putEventExtras(events: List<CalendarEvent>) {
+        putExtra(EXTRA_EVENT_COUNT, events.size)
+        events.forEachIndexed { index, event ->
+            putExtra("${EVENT_PREFIX}${index}_title", event.title)
+            putExtra("${EVENT_PREFIX}${index}_description", event.description.orEmpty())
+            putExtra("${EVENT_PREFIX}${index}_begin", event.dateTime)
+            IsoDateTimes.toEpochMillis(event.dateTime)?.let { beginMillis ->
+                putExtra("${EVENT_PREFIX}${index}_beginMillis", beginMillis)
+                putExtra(
+                    "${EVENT_PREFIX}${index}_endMillis",
+                    beginMillis + IsoDateTimes.DEFAULT_EVENT_DURATION_MS
+                )
+            }
+        }
     }
 
     /**
@@ -134,5 +191,23 @@ class MacroDroidActionProvider @Inject constructor(
 
         /** Extra key: whether the failure is retryable (Boolean). */
         const val EXTRA_RETRYABLE = "retryable"
+
+        /** Extra key: all extracted tasks as a JSON array string. */
+        const val EXTRA_TASKS_JSON = "tasksJson"
+
+        /** Extra key: all extracted calendar events as a JSON array string. */
+        const val EXTRA_EVENTS_JSON = "eventsJson"
+
+        /** Extra key: number of extracted tasks, bounding the `task_N_*` extras. */
+        const val EXTRA_TASK_COUNT = "taskCount"
+
+        /** Extra key: number of extracted events, bounding the `event_N_*` extras. */
+        const val EXTRA_EVENT_COUNT = "eventCount"
+
+        /** Prefix for per-task flattened extras, e.g. `task_0_title`. */
+        const val TASK_PREFIX = "task_"
+
+        /** Prefix for per-event flattened extras, e.g. `event_0_title`. */
+        const val EVENT_PREFIX = "event_"
     }
 }

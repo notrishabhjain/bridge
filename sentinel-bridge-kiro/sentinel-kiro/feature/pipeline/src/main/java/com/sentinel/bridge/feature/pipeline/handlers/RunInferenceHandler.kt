@@ -8,42 +8,52 @@ import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Handles running local LLM inference via [AIProvider] (backed by LlamaCppProvider).
+ * Runs local LLM inference via [AIProvider] (backed by LlamaCppProvider).
  *
- * Invokes [AIProvider.infer] with the rendered prompt and a default [InferenceConfig].
- * For MVP, the prompt is a placeholder string — the real prompt will come from session
- * state once full pipeline integration is wired (Task 78).
+ * Reads the prompt the build-prompt stage rendered, ensures the model is loaded,
+ * runs inference, and stores the raw output on the session for the parse stage.
  *
- * The handler uses `maxRetries = 1` to allow one automatic retry on transient inference
- * failures (e.g., OOM during token generation).
+ * Uses `maxRetries = 1` to allow one automatic retry on transient inference
+ * failures such as an OOM during token generation.
  */
 open class RunInferenceHandler @Inject constructor(
     private val logger: SentinelLogger,
-    private val aiProvider: AIProvider
+    private val aiProvider: AIProvider,
+    private val sessionStore: PipelineSessionStore
 ) : BaseCommandHandler<PipelineCommand.RunInference>(maxRetries = 1) {
 
     override val stage: PipelineStage = PipelineStage.INFERENCE
 
     /**
-     * Runs LLM inference using the injected [AIProvider].
+     * Runs inference over the session's rendered prompt.
      *
-     * For MVP, uses a default [InferenceConfig] and an empty prompt placeholder.
-     * The real prompt and config will be sourced from session state in the full
-     * pipeline integration (Task 78).
-     *
-     * @param command The inference command containing the session ID.
-     * @return [CommandResult.Success] after inference completes successfully.
-     * @throws Exception if inference fails, triggering retry via [BaseCommandHandler].
+     * @throws com.sentinel.bridge.feature.pipeline.MissingSessionStateException if no
+     *         prompt is present.
+     * @throws IllegalStateException if the model could not be loaded, or if the model
+     *         returned nothing — an empty completion cannot be parsed and is reported
+     *         here where the cause is still visible.
      */
     override suspend fun doExecute(command: PipelineCommand.RunInference): CommandResult {
-        logger.logInfo(command.sessionId, stage.name, "Starting LLM inference")
+        val prompt = sessionStore.requirePrompt(command.sessionId)
 
-        // Default config — real values will come from PromptTemplate in full integration
+        logger.logInfo(
+            command.sessionId,
+            stage.name,
+            "Starting LLM inference (prompt=${prompt.length} chars)"
+        )
+
+        if (!aiProvider.isAvailable) {
+            aiProvider.loadModel().getOrElse { cause ->
+                throw IllegalStateException("Failed to load the AI model: ${cause.message}", cause)
+            }
+        }
+
         val config = InferenceConfig(
             temperature = DEFAULT_TEMPERATURE,
             maxTokens = DEFAULT_MAX_TOKENS,
@@ -54,15 +64,18 @@ open class RunInferenceHandler @Inject constructor(
             threads = DEFAULT_THREADS
         )
 
-        // Stub prompt — real prompt will come from session state (written by BuildPromptHandler)
-        val prompt = ""
+        val output = aiProvider.infer(prompt, config)
 
-        val result = aiProvider.infer(prompt, config)
+        check(output.isNotBlank()) {
+            "The model returned an empty response. It may have run out of context or been cancelled."
+        }
+
+        sessionStore.update(command.sessionId) { it.copy(rawResponse = output) }
 
         logger.logInfo(
             command.sessionId,
             stage.name,
-            "Inference completed (output length=${result.length} chars)"
+            "Inference completed (output=${output.length} chars)"
         )
 
         return CommandResult.Success(command.sessionId)

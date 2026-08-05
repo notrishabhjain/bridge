@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // hiltViewModel() for Compose screens
+    implementation(libs.hilt.navigation.compose)
+
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

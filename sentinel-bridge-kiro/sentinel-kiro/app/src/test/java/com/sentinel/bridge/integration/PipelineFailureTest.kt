@@ -14,6 +14,7 @@ import com.sentinel.bridge.feature.pipeline.CommandBus
 import com.sentinel.bridge.feature.pipeline.CommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
 import com.sentinel.bridge.feature.pipeline.PipelineOrchestrator
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import com.sentinel.bridge.feature.setup.CapabilityManager
 import com.sentinel.bridge.feature.setup.CapabilityReport
@@ -145,6 +146,7 @@ class PipelineFailureTest {
                 pipelineSessionDao = pipelineSessionDao,
                 logRepository = logRepository,
                 appSettingsRepository = appSettingsRepository,
+                sessionStore = PipelineSessionStore(),
                 logger = logger
             )
 
@@ -206,6 +208,7 @@ class PipelineFailureTest {
                 pipelineSessionDao = pipelineSessionDao,
                 logRepository = logRepository,
                 appSettingsRepository = appSettingsRepository,
+                sessionStore = PipelineSessionStore(),
                 logger = logger
             )
 
@@ -268,6 +271,7 @@ class PipelineFailureTest {
                 pipelineSessionDao = pipelineSessionDao,
                 logRepository = logRepository,
                 appSettingsRepository = appSettingsRepository,
+                sessionStore = PipelineSessionStore(),
                 logger = logger
             )
 
@@ -334,6 +338,7 @@ class PipelineFailureTest {
                 pipelineSessionDao = pipelineSessionDao,
                 logRepository = logRepository,
                 appSettingsRepository = appSettingsRepository,
+                sessionStore = PipelineSessionStore(),
                 logger = logger
             )
 
@@ -374,6 +379,7 @@ class PipelineFailureTest {
                 pipelineSessionDao = pipelineSessionDao,
                 logRepository = logRepository,
                 appSettingsRepository = appSettingsRepository,
+                sessionStore = PipelineSessionStore(),
                 logger = logger
             )
 

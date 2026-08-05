@@ -3,6 +3,7 @@ package com.sentinel.bridge.feature.pipeline.handlers
 import com.sentinel.bridge.core.common.logging.SentinelLogger
 import com.sentinel.bridge.core.domain.interfaces.AIProvider
 import com.sentinel.bridge.core.domain.model.ErrorCategory
+import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
 import com.sentinel.bridge.feature.ai.rules.RulesEngine
@@ -10,6 +11,7 @@ import com.sentinel.bridge.feature.ai.validation.JSONValidator
 import com.sentinel.bridge.feature.ai.validation.ValidationResult
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.RetryPolicy
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import io.mockk.coEvery
@@ -32,12 +34,48 @@ class CommandHandlerStubsTest {
 
     private val logger: SentinelLogger = mockk(relaxed = true)
     private val aiProvider: AIProvider = mockk(relaxed = true) {
-        coEvery { infer(any(), any()) } returns ""
+        every { isAvailable } returns true
+        coEvery { infer(any(), any()) } returns MODEL_OUTPUT
     }
     private val rulesEngine: RulesEngine = mockk(relaxed = true)
     private val jsonValidator: JSONValidator = mockk(relaxed = true) {
         every { validate(any()) } returns ValidationResult.Valid("{}")
     }
+
+    /**
+     * Fresh store per test so state seeded by one case cannot satisfy another.
+     */
+    private val sessionStore = PipelineSessionStore()
+
+    /**
+     * Seeds the state a stage depends on, standing in for the stages that would have
+     * run before it in a real pipeline.
+     */
+    private fun seedState(
+        sessionId: String,
+        prompt: String? = null,
+        rawResponse: String? = null,
+        result: PipelineResult? = null
+    ) {
+        sessionStore.update(sessionId) {
+            it.copy(renderedPrompt = prompt, rawResponse = rawResponse, result = result)
+        }
+    }
+
+    private fun emptyResult(sessionId: String) = PipelineResult(
+        sessionId = sessionId,
+        summary = "",
+        confidence = 0f,
+        tasks = emptyList(),
+        calendarEvents = emptyList(),
+        followUps = emptyList(),
+        people = emptyList(),
+        projects = emptyList(),
+        processingTimeMs = 0L,
+        model = "",
+        promptVersion = "",
+        pipelineVersion = "1"
+    )
 
     // ─────────────────────────────────────────────────────────────────────────
     // Section 1: RetryPolicy unit tests
@@ -252,30 +290,61 @@ class CommandHandlerStubsTest {
     inner class RunInferenceHandlerTests {
 
         @Test
-        fun `returns Success with correct sessionId`() = runTest {
-            val handler = RunInferenceHandler(logger, aiProvider)
+        fun `returns Success and stores the model output`() = runTest {
+            seedState("session-infer", prompt = "a rendered prompt")
+            val handler = RunInferenceHandler(logger, aiProvider, sessionStore)
 
             val result = handler.execute(PipelineCommand.RunInference("session-infer"))
 
             assertInstanceOf(CommandResult.Success::class.java, result)
             assertEquals("session-infer", (result as CommandResult.Success).sessionId)
+            assertEquals(MODEL_OUTPUT, sessionStore.get("session-infer")?.rawResponse)
+        }
+
+        @Test
+        fun `fails when no prompt was built`() = runTest {
+            val handler = RunInferenceHandler(logger, aiProvider, sessionStore)
+
+            val result = handler.execute(PipelineCommand.RunInference("session-no-prompt"))
+
+            assertInstanceOf(CommandResult.Failure::class.java, result)
+            assertEquals("ERR_INFERENCE", (result as CommandResult.Failure).error.code)
+        }
+
+        @Test
+        fun `fails when the model returns nothing`() = runTest {
+            seedState("session-empty", prompt = "a rendered prompt")
+            val emptyProvider: AIProvider = mockk(relaxed = true) {
+                every { isAvailable } returns true
+                coEvery { infer(any(), any()) } returns "   "
+            }
+            val handler = RunInferenceHandler(logger, emptyProvider, sessionStore)
+
+            val result = handler.execute(PipelineCommand.RunInference("session-empty"))
+
+            assertInstanceOf(CommandResult.Failure::class.java, result)
         }
 
         @Test
         fun `has correct stage property`() {
-            val handler = RunInferenceHandler(logger, aiProvider)
+            val handler = RunInferenceHandler(logger, aiProvider, sessionStore)
             assertEquals(PipelineStage.INFERENCE, handler.stage)
         }
 
         @Test
         fun `has correct maxRetries value`() {
-            val handler = RunInferenceHandler(logger, aiProvider)
+            val handler = RunInferenceHandler(logger, aiProvider, sessionStore)
             assertEquals(1, handler.maxRetries)
         }
 
         @Test
         fun `buildError produces correct ErrorCategory via execute failure path`() = runTest {
-            val handler = FailingRunInferenceHandler(logger, aiProvider, RuntimeException("OOM during inference"))
+            val handler = FailingRunInferenceHandler(
+                logger,
+                aiProvider,
+                sessionStore,
+                RuntimeException("OOM during inference")
+            )
 
             val result = handler.execute(PipelineCommand.RunInference("session-infer-err"))
 
@@ -296,7 +365,12 @@ class CommandHandlerStubsTest {
 
         @Test
         fun `returns Success with correct sessionId`() = runTest {
-            val handler = ValidateJsonHandler(logger, jsonValidator)
+            seedState(
+                "session-json",
+                rawResponse = MODEL_OUTPUT,
+                result = emptyResult("session-json")
+            )
+            val handler = ValidateJsonHandler(logger, jsonValidator, sessionStore)
 
             val result = handler.execute(PipelineCommand.ValidateJson("session-json"))
 
@@ -305,20 +379,35 @@ class CommandHandlerStubsTest {
         }
 
         @Test
+        fun `fails when the parse stage stored no result`() = runTest {
+            seedState("session-unparsed", rawResponse = MODEL_OUTPUT)
+            val handler = ValidateJsonHandler(logger, jsonValidator, sessionStore)
+
+            val result = handler.execute(PipelineCommand.ValidateJson("session-unparsed"))
+
+            assertInstanceOf(CommandResult.Failure::class.java, result)
+        }
+
+        @Test
         fun `has correct stage property`() {
-            val handler = ValidateJsonHandler(logger, jsonValidator)
+            val handler = ValidateJsonHandler(logger, jsonValidator, sessionStore)
             assertEquals(PipelineStage.VALIDATE_JSON, handler.stage)
         }
 
         @Test
         fun `has correct maxRetries value`() {
-            val handler = ValidateJsonHandler(logger, jsonValidator)
+            val handler = ValidateJsonHandler(logger, jsonValidator, sessionStore)
             assertEquals(1, handler.maxRetries)
         }
 
         @Test
         fun `buildError produces correct ErrorCategory via execute failure path`() = runTest {
-            val handler = FailingValidateJsonHandler(logger, jsonValidator, RuntimeException("invalid schema"))
+            val handler = FailingValidateJsonHandler(
+                logger,
+                jsonValidator,
+                sessionStore,
+                RuntimeException("invalid schema")
+            )
 
             val result = handler.execute(PipelineCommand.ValidateJson("session-json-err"))
 
@@ -383,8 +472,9 @@ class CommandHandlerStubsTest {
     private class FailingRunInferenceHandler(
         logger: SentinelLogger,
         aiProvider: AIProvider,
+        sessionStore: PipelineSessionStore,
         private val exception: Exception
-    ) : RunInferenceHandler(logger, aiProvider) {
+    ) : RunInferenceHandler(logger, aiProvider, sessionStore) {
 
         override suspend fun doExecute(command: PipelineCommand.RunInference): CommandResult {
             throw exception
@@ -397,11 +487,17 @@ class CommandHandlerStubsTest {
     private class FailingValidateJsonHandler(
         logger: SentinelLogger,
         jsonValidator: JSONValidator,
+        sessionStore: PipelineSessionStore,
         private val exception: Exception
-    ) : ValidateJsonHandler(logger, jsonValidator) {
+    ) : ValidateJsonHandler(logger, jsonValidator, sessionStore) {
 
         override suspend fun doExecute(command: PipelineCommand.ValidateJson): CommandResult {
             throw exception
         }
+    }
+
+    private companion object {
+        /** Stand-in for a well-formed model completion. */
+        const val MODEL_OUTPUT = """{"summary":"s","confidence":0.9,"tasks":[]}"""
     }
 }

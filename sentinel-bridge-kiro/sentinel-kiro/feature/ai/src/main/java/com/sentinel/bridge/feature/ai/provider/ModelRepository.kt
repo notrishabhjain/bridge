@@ -68,21 +68,40 @@ class ModelRepository @Inject constructor(
     }
 
     /**
+     * Whether the configuration carries a usable SHA-256 checksum.
+     *
+     * A blank value, or the placeholder shipped in the template config, means no
+     * expected hash has been pinned yet — treated as "verification not configured"
+     * rather than as a mismatch.
+     */
+    fun isChecksumConfigured(): Boolean {
+        val checksum = loadConfig().checksum.trim()
+        return checksum.isNotEmpty() &&
+            !checksum.startsWith(CHECKSUM_PLACEHOLDER_PREFIX, ignoreCase = true) &&
+            checksum.matches(SHA256_HEX)
+    }
+
+    /**
      * Verifies the integrity of the downloaded model file by comparing its SHA-256
      * checksum against the expected value from the configuration.
+     *
+     * When no checksum is pinned ([isChecksumConfigured] is `false`) this returns
+     * `true` without hashing: an unpinned build must not be blocked by a check it
+     * cannot possibly satisfy. Callers should surface that the file went unverified.
      *
      * The file read and hash computation are performed on [Dispatchers.IO] to avoid
      * blocking the calling coroutine context.
      *
-     * @return `true` if the computed checksum matches the expected checksum, `false`
-     *         if the file does not exist or the checksums do not match.
+     * @return `true` if the file exists and either matches the pinned checksum or no
+     *         checksum is pinned; `false` if the file is missing or the hash differs.
      */
     suspend fun verifyChecksum(): Boolean {
         val modelPath = getModelPath()
         val file = File(modelPath)
         if (!file.exists()) return false
+        if (!isChecksumConfigured()) return true
         val computed = computeChecksum(modelPath)
-        return computed.equals(loadConfig().checksum, ignoreCase = true)
+        return computed.equals(loadConfig().checksum.trim(), ignoreCase = true)
     }
 
     /**
@@ -128,5 +147,13 @@ class ModelRepository @Inject constructor(
             contextSize = json.getInt("contextSize"),
             threads = json.getInt("threads")
         )
+    }
+
+    private companion object {
+        /** Prefix of the placeholder checksum shipped in the template config. */
+        const val CHECKSUM_PLACEHOLDER_PREFIX = "PLACEHOLDER"
+
+        /** A pinned checksum must be exactly 64 hex characters. */
+        val SHA256_HEX = Regex("^[0-9a-fA-F]{64}$")
     }
 }

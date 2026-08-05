@@ -1,13 +1,9 @@
 package com.sentinel.bridge.feature.setup
 
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.database.Cursor
 import android.net.Uri
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sentinel.bridge.core.data.datastore.AppSettingsRepository
@@ -204,8 +200,7 @@ class SetupWizardViewModel @Inject constructor(
      */
     private fun startModelDownload() {
         val config = modelRepository.loadConfig()
-        val modelPath = modelRepository.getModelPath()
-        val modelFile = File(modelPath)
+        val modelFile = File(modelRepository.getModelPath())
 
         // If model already exists, skip download
         if (modelFile.exists()) {
@@ -220,88 +215,103 @@ class SetupWizardViewModel @Inject constructor(
         val request = DownloadManager.Request(Uri.parse(config.downloadUrl))
             .setTitle("Sentinel AI Model")
             .setDescription("Downloading ${config.name} model")
-            .setDestinationUri(Uri.fromFile(modelFile))
+            // DownloadManager runs in the system process and writes as a different UID.
+            // setDestinationInExternalFilesDir grants it access to our app-specific
+            // directory; a bare file:// Uri does not and can stall the download.
+            .setDestinationInExternalFilesDir(context, MODELS_DIRECTORY, modelFile.name)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
 
         downloadId = downloadManager.enqueue(request)
 
-        // Register completion receiver
-        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(ctx: Context, intent: Intent) {
-                val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                if (id == downloadId) {
-                    context.unregisterReceiver(this)
-                    progressPollingJob?.cancel()
-                    _downloadProgress.value = 1f
-                    handleDownloadComplete(downloadManager)
-                }
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            context.registerReceiver(receiver, filter)
-        }
-
-        // Poll progress
+        // Polling is authoritative for completion, not ACTION_DOWNLOAD_COMPLETE.
+        // That broadcast is sent by the system (a different app), so a receiver
+        // registered RECEIVER_NOT_EXPORTED never receives it on Android 13+ and the
+        // wizard would sit at 0% forever. Polling the cursor for a terminal status
+        // needs no receiver and cannot be missed.
         progressPollingJob = viewModelScope.launch {
             while (isActive) {
-                pollDownloadProgress(downloadManager)
+                if (pollDownload(downloadManager)) return@launch
                 delay(PROGRESS_POLL_INTERVAL_MS)
             }
         }
     }
 
     /**
-     * Polls [DownloadManager] for the current download progress and updates
-     * [downloadProgress] as a fraction.
+     * Polls [DownloadManager] once, updating [downloadProgress] and handling
+     * terminal states.
+     *
+     * @return `true` when the download reached a terminal state (success, failure,
+     *         or the row disappeared) and polling should stop; `false` to keep polling.
      */
-    private fun pollDownloadProgress(downloadManager: DownloadManager) {
+    private fun pollDownload(downloadManager: DownloadManager): Boolean {
         val query = DownloadManager.Query().setFilterById(downloadId)
         val cursor: Cursor? = downloadManager.query(query)
+
         cursor?.use {
-            if (it.moveToFirst()) {
-                val bytesDownloaded = it.getLong(
-                    it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+            if (!it.moveToFirst()) {
+                // Row vanished — the download was cancelled or cleared externally.
+                markStepFailed(
+                    SetupStep.MODEL_DOWNLOAD,
+                    "Download was cancelled before it finished. Please retry."
                 )
-                val bytesTotal = it.getLong(
-                    it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                )
-                if (bytesTotal > 0) {
-                    _downloadProgress.value = bytesDownloaded.toFloat() / bytesTotal.toFloat()
+                return true
+            }
+
+            val status = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+            val bytesDownloaded = it.getLong(
+                it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+            )
+            val bytesTotal = it.getLong(
+                it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+            )
+            if (bytesTotal > 0) {
+                _downloadProgress.value = bytesDownloaded.toFloat() / bytesTotal.toFloat()
+            }
+
+            return when (status) {
+                DownloadManager.STATUS_SUCCESSFUL -> {
+                    _downloadProgress.value = 1f
+                    markStepCompleteAndAdvance(SetupStep.MODEL_DOWNLOAD)
+                    true
                 }
+
+                DownloadManager.STATUS_FAILED -> {
+                    val reason = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                    markStepFailed(
+                        SetupStep.MODEL_DOWNLOAD,
+                        "Download failed (${describeFailure(reason)}). Please retry."
+                    )
+                    true
+                }
+
+                else -> false // PENDING, RUNNING, or PAUSED — keep polling.
             }
         }
+
+        // query() returned null — treat as a terminal failure rather than spinning.
+        markStepFailed(
+            SetupStep.MODEL_DOWNLOAD,
+            "Could not read download status from the system. Please retry."
+        )
+        return true
     }
 
     /**
-     * Handles download completion by checking the [DownloadManager] status.
-     * Advances to checksum verification on success, marks failed otherwise.
+     * Maps a [DownloadManager] `COLUMN_REASON` value to a message that names the
+     * actual problem, so a bad model URL is not indistinguishable from a dropped
+     * connection.
      */
-    private fun handleDownloadComplete(downloadManager: DownloadManager) {
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        val cursor: Cursor? = downloadManager.query(query)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val status = it.getInt(
-                    it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                )
-                if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    markStepCompleteAndAdvance(SetupStep.MODEL_DOWNLOAD)
-                } else {
-                    val reason = it.getInt(
-                        it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
-                    )
-                    markStepFailed(
-                        SetupStep.MODEL_DOWNLOAD,
-                        "Download failed (status=$status, reason=$reason). Please retry."
-                    )
-                }
-            }
-        }
+    private fun describeFailure(reason: Int): String = when (reason) {
+        HTTP_NOT_FOUND -> "model file not found at the configured URL (HTTP 404)"
+        DownloadManager.ERROR_INSUFFICIENT_SPACE -> "not enough free storage"
+        DownloadManager.ERROR_DEVICE_NOT_FOUND -> "storage unavailable"
+        DownloadManager.ERROR_HTTP_DATA_ERROR -> "the connection dropped mid-transfer"
+        DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "too many redirects from the host"
+        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "unexpected HTTP response from the host"
+        DownloadManager.ERROR_CANNOT_RESUME -> "the download could not be resumed"
+        DownloadManager.ERROR_FILE_ERROR -> "the destination file could not be written"
+        in HTTP_ERROR_RANGE -> "HTTP $reason from the host"
+        else -> "reason=$reason"
     }
 
     /**
@@ -310,14 +320,22 @@ class SetupWizardViewModel @Inject constructor(
      */
     private suspend fun verifyChecksum() {
         val valid = modelRepository.verifyChecksum()
-        if (valid) {
-            markStepCompleteAndAdvance(SetupStep.CHECKSUM_VERIFY)
-        } else {
+        if (!valid) {
             markStepFailed(
                 SetupStep.CHECKSUM_VERIFY,
                 "Model checksum verification failed. The file may be corrupted."
             )
+            return
         }
+
+        // verifyChecksum() passes an unpinned build through rather than blocking it,
+        // so say plainly that nothing was actually verified.
+        if (!modelRepository.isChecksumConfigured()) {
+            _errorMessage.value =
+                "No checksum is pinned in model_config.json — the model was downloaded " +
+                    "but its integrity was not verified."
+        }
+        markStepCompleteAndAdvance(SetupStep.CHECKSUM_VERIFY)
     }
 
     /**
@@ -372,5 +390,17 @@ class SetupWizardViewModel @Inject constructor(
     companion object {
         /** Interval in milliseconds between download progress polls. */
         private const val PROGRESS_POLL_INTERVAL_MS = 500L
+
+        /**
+         * Subdirectory under the app's external files dir where the model is stored.
+         * Must match the directory used by [ModelRepository.getModelPath].
+         */
+        private const val MODELS_DIRECTORY = "models"
+
+        /** DownloadManager surfaces bare HTTP status codes as the failure reason. */
+        private const val HTTP_NOT_FOUND = 404
+
+        /** Range of raw HTTP status codes DownloadManager may report as a reason. */
+        private val HTTP_ERROR_RANGE = 400..599
     }
 }

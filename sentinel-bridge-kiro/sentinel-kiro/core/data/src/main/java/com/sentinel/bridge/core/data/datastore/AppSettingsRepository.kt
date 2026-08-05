@@ -235,8 +235,13 @@ class AppSettingsRepository @Inject constructor(
         /** Default: 2048 MB (2 GB) — minimum free RAM for model loading. */
         const val DEFAULT_MIN_FREE_RAM_MB = 2048
 
-        /** Default: 500 MB — minimum free storage for pipeline operations. */
-        const val DEFAULT_MIN_FREE_STORAGE_MB = 500
+        /**
+         * Default: 3000 MB — must cover the model download, not just pipeline scratch
+         * space. The Q4_K_M GGUF is roughly 2.5 GB, so the previous 500 MB threshold
+         * let the Device Check pass on a device that would then run out of room
+         * partway through the download.
+         */
+        const val DEFAULT_MIN_FREE_STORAGE_MB = 3000
 
         /** Default: 3 — maximum retries per pipeline stage. */
         const val DEFAULT_MAX_PIPELINE_RETRIES = 3

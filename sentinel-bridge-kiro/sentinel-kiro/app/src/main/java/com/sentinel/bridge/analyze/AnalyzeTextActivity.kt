@@ -122,15 +122,23 @@ private fun AnalyzeScreen(viewModel: AnalyzeTextViewModel = hiltViewModel()) {
         when (val state = uiState) {
             is AnalyzeUiState.Idle -> Unit
 
-            is AnalyzeUiState.Running -> Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            is AnalyzeUiState.Running -> Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                Text(
-                    text = "Running on-device inference. This can take a minute or two.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    Text(
+                        text = "Running on-device inference. A few minutes is normal on " +
+                            "phone hardware; it gives up after five.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                OutlinedButton(onClick = viewModel::cancel) {
+                    Text("Stop")
+                }
             }
 
             is AnalyzeUiState.Error -> Card(

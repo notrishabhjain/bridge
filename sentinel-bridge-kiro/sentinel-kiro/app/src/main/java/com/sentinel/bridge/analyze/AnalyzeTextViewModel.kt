@@ -3,6 +3,7 @@ package com.sentinel.bridge.analyze
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sentinel.bridge.core.data.db.dao.PipelineResultDao
+import com.sentinel.bridge.core.domain.interfaces.AIProvider
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.feature.pipeline.CommandResult
 import com.sentinel.bridge.feature.pipeline.PipelineOrchestrator
@@ -54,7 +55,8 @@ sealed interface AnalyzeUiState {
 @HiltViewModel
 class AnalyzeTextViewModel @Inject constructor(
     private val orchestrator: PipelineOrchestrator,
-    private val pipelineResultDao: PipelineResultDao
+    private val pipelineResultDao: PipelineResultDao,
+    private val aiProvider: AIProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AnalyzeUiState>(AnalyzeUiState.Idle)
@@ -87,6 +89,18 @@ class AnalyzeTextViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Stops an in-progress run.
+     *
+     * The native generation loop checks a cancellation flag once per token, so this
+     * takes effect within a token rather than immediately. The run then fails through
+     * the normal path and the screen shows why.
+     */
+    fun cancel() {
+        if (_uiState.value !is AnalyzeUiState.Running) return
+        aiProvider.cancelInference()
     }
 
     /** Returns the screen to its initial state. */

@@ -3,6 +3,7 @@ package com.sentinel.bridge.feature.pipeline.handlers
 import com.sentinel.bridge.core.common.logging.SentinelLogger
 import com.sentinel.bridge.core.domain.interfaces.AIProvider
 import com.sentinel.bridge.core.domain.model.ErrorCategory
+import com.sentinel.bridge.core.domain.model.InferenceConfig
 import com.sentinel.bridge.core.domain.model.PipelineResult
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
@@ -11,12 +12,14 @@ import com.sentinel.bridge.feature.ai.validation.JSONValidator
 import com.sentinel.bridge.feature.ai.validation.ValidationResult
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.InferenceSettings
 import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.RetryPolicy
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -309,6 +312,36 @@ class CommandHandlerStubsTest {
 
             assertInstanceOf(CommandResult.Failure::class.java, result)
             assertEquals("ERR_INFERENCE", (result as CommandResult.Failure).error.code)
+        }
+
+        @Test
+        fun `uses the sampling settings the prompt template supplied`() = runTest {
+            // The handler's own constants are fallbacks; drifting from the template the
+            // prompt was authored against silently changes generation behaviour.
+            sessionStore.update("session-settings") {
+                it.copy(
+                    renderedPrompt = "a rendered prompt",
+                    inference = InferenceSettings(
+                        temperature = 0.15f,
+                        maxTokens = 321,
+                        topP = 0.5f,
+                        topK = 7,
+                        repeatPenalty = 1.25f
+                    )
+                )
+            }
+            val captured = slot<InferenceConfig>()
+            val provider: AIProvider = mockk(relaxed = true) {
+                every { isAvailable } returns true
+                coEvery { infer(any(), capture(captured)) } returns MODEL_OUTPUT
+            }
+
+            val handler = RunInferenceHandler(logger, provider, sessionStore)
+            handler.execute(PipelineCommand.RunInference("session-settings"))
+
+            assertEquals(321, captured.captured.maxTokens)
+            assertEquals(0.15f, captured.captured.temperature)
+            assertEquals(7, captured.captured.topK)
         }
 
         @Test

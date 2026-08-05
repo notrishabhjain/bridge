@@ -11,6 +11,7 @@ compose-bom = "2024.10.01"
 junit5 = "5.10.3"
 mockk = "1.13.12"
 turbine = "1.1.0"
+json = "20240303"
 detekt = "1.23.7"
 core-ktx = "1.13.1"
 lifecycle = "2.8.6"
@@ -77,6 +78,11 @@ junit5-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", ve
 # MockK
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
+
+# Real org.json for JVM unit tests. android.jar only ships stubs, and with
+# isReturnDefaultValues=true those return null instead of throwing, so code using
+# JSONObject/JSONArray fails with a NullPointerException under test.
+json = { group = "org.json", name = "json", version.ref = "json" }
 
 # Turbine
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }

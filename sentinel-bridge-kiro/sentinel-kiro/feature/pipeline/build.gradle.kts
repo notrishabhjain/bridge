@@ -54,5 +54,9 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.workmanager.testing)
+
+    // Shadows android.jar's org.json stubs, which return null under
+    // isReturnDefaultValues and would make result serialisation NPE in tests.
+    testImplementation(libs.json)
 }
 

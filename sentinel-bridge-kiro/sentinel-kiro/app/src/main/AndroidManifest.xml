@@ -2,6 +2,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- DownloadManager's provider enforces INTERNET on the calling app, so the
+         model download in the setup wizard needs it even though the system
+         process performs the transfer. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Package visibility (Android 11+ / targetSdk 30+): without these the
+         recorder is invisible to getPackageInfo() and getLaunchIntentForPackage()
+         even when it is installed, so the Device Check fails and the pipeline
+         cannot launch the Recorder. The MAIN/LAUNCHER intent query covers any
+         recorder the user configures at runtime; the explicit entries cover the
+         known Xiaomi/AOSP package names. -->
+    <queries>
+        <package android:name="com.miui.voiceassist" />
+        <package android:name="com.android.soundrecorder" />
+        <package android:name="com.miui.recorder" />
+        <package android:name="com.xiaomi.soundrecorder" />
+
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SentinelApplication"
         android:allowBackup="false"

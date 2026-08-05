@@ -225,22 +225,44 @@ class CapabilityManager @Inject constructor(
     }
 
     /**
-     * Checks whether the Xiaomi Recorder app is installed on the device.
+     * Checks whether a recorder app is installed on the device.
      *
-     * Reads the recorder package name from [AppSettingsRepository] and attempts
-     * to resolve it via [android.content.pm.PackageManager].
+     * Tries the package configured in [AppSettingsRepository] first. If that one is
+     * absent, falls back to scanning [KNOWN_RECORDER_PACKAGES] — recorder package
+     * names differ across Xiaomi builds (`com.miui.voiceassist` on some HyperOS 2
+     * images, `com.android.soundrecorder` on others). When a fallback matches it is
+     * persisted, so the subsequent inspection and pipeline stages launch the package
+     * that actually exists on this device.
      *
-     * @return `true` if the recorder package is installed; `false` otherwise.
+     * Requires the `<queries>` entries in the app manifest — under Android 11+
+     * package visibility an undeclared package is reported as not installed.
+     *
+     * @return `true` if a recorder package was resolved; `false` otherwise.
+     */
+    private suspend fun checkRecorderInstalled(): Boolean {
+        val configured = appSettingsRepository.recorderPackage.first()
+        if (isPackageInstalled(configured)) return true
+
+        val detected = KNOWN_RECORDER_PACKAGES.firstOrNull {
+            it != configured && isPackageInstalled(it)
+        } ?: return false
+
+        appSettingsRepository.setRecorderPackage(detected)
+        return true
+    }
+
+    /**
+     * Resolves a package name through the package manager.
+     *
+     * @param packageName Fully qualified package name to look up.
+     * @return `true` if the package is installed and visible to this app.
      */
     @Suppress("DEPRECATION")
-    private suspend fun checkRecorderInstalled(): Boolean {
-        val recorderPackage = appSettingsRepository.recorderPackage.first()
-        return try {
-            context.packageManager.getPackageInfo(recorderPackage, 0)
-            true
-        } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
-            false
-        }
+    private fun isPackageInstalled(packageName: String): Boolean = try {
+        context.packageManager.getPackageInfo(packageName, 0)
+        true
+    } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+        false
     }
 
     /**
@@ -519,6 +541,19 @@ class CapabilityManager @Inject constructor(
 
         /** Broadcast action sent when the current device state does not match the stored profile. */
         const val CAPABILITY_MISMATCH_ACTION = "com.sentinel.bridge.CAPABILITY_MISMATCH"
+
+        /**
+         * Recorder packages probed when the configured one is absent, in preference order.
+         *
+         * Every entry must also appear in the app manifest's `<queries>` block to be
+         * visible under Android 11+ package visibility filtering.
+         */
+        private val KNOWN_RECORDER_PACKAGES = listOf(
+            "com.miui.voiceassist",
+            "com.android.soundrecorder",
+            "com.miui.recorder",
+            "com.xiaomi.soundrecorder"
+        )
     }
 
     /**

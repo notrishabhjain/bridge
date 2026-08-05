@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.provider.Settings
 import com.sentinel.bridge.core.data.datastore.AppSettingsRepository
 import com.sentinel.bridge.core.data.db.dao.CapabilityProfileDao
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -123,15 +124,19 @@ class CapabilityManagerTest {
 
     /**
      * Helper to configure PackageManager for recorder installed check.
+     *
+     * When [installed] is false every known recorder package must be stubbed to
+     * throw, otherwise the fallback scan in `checkRecorderInstalled()` would
+     * resolve one of the alternates against the relaxed mock.
      */
     @Suppress("DEPRECATION")
     private fun stubRecorderInstalled(installed: Boolean) {
+        every {
+            packageManager.getPackageInfo(any<String>(), 0)
+        } throws PackageManager.NameNotFoundException()
+
         if (installed) {
             every { packageManager.getPackageInfo("com.miui.voiceassist", 0) } returns PackageInfo()
-        } else {
-            every {
-                packageManager.getPackageInfo("com.miui.voiceassist", 0)
-            } throws PackageManager.NameNotFoundException()
         }
     }
 
@@ -213,6 +218,25 @@ class CapabilityManagerTest {
 
         assertFalse(report.recorderInstalled)
         assertFalse(report.allPassed)
+    }
+
+    @Test
+    @DisplayName("Configured recorder absent but alternate present → detected and persisted")
+    @Suppress("DEPRECATION")
+    fun recorderFallbackPackage_detectedAndPersisted() = runTest {
+        stubAllCapabilitiesPass()
+        // Configured package is missing; the device ships the AOSP recorder instead.
+        every {
+            packageManager.getPackageInfo(any<String>(), 0)
+        } throws PackageManager.NameNotFoundException()
+        every {
+            packageManager.getPackageInfo("com.android.soundrecorder", 0)
+        } returns PackageInfo()
+
+        val report = capabilityManager.checkAllCapabilities()
+
+        assertTrue(report.recorderInstalled)
+        coVerify { appSettingsRepository.setRecorderPackage("com.android.soundrecorder") }
     }
 
     @Test

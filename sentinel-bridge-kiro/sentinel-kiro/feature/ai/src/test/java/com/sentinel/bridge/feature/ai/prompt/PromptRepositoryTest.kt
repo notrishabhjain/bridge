@@ -214,6 +214,27 @@ class PromptRepositoryTest {
         assertEquals(0.9f, template.topP, "Default topP should be 0.9")
         assertEquals(40, template.topK, "Default topK should be 40")
         assertEquals(1.0f, template.repeatPenalty, "Default repeatPenalty should be 1.0")
+        // Defaulting to a chat format rather than raw text matters: an unwrapped prompt
+        // leaves an instruct model in completion mode, where it never stops generating.
+        assertEquals(ChatTemplates.DEFAULT, template.chatFormat)
+    }
+
+    @Test
+    @DisplayName("Reads chatFormat from frontmatter when present")
+    fun readsChatFormatFromFrontmatter() {
+        val content = """
+            |---
+            |version: 1.0
+            |model: some-base-model
+            |schema: summary
+            |chatFormat: none
+            |---
+            |{{transcript}}
+        """.trimMargin()
+
+        stubAsset("raw.md", content)
+
+        assertEquals(ChatTemplates.NONE, repository.loadTemplate("raw.md").chatFormat)
     }
 
     @Test

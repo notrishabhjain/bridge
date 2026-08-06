@@ -4,11 +4,13 @@ import com.sentinel.bridge.core.common.logging.SentinelLogger
 import com.sentinel.bridge.core.domain.model.ErrorCategory
 import com.sentinel.bridge.core.domain.model.PipelineStage
 import com.sentinel.bridge.core.domain.model.SentinelError
+import com.sentinel.bridge.feature.ai.prompt.ChatTemplates
 import com.sentinel.bridge.feature.ai.prompt.OutputSchemas
 import com.sentinel.bridge.feature.ai.prompt.PromptRenderer
 import com.sentinel.bridge.feature.ai.prompt.PromptRepository
 import com.sentinel.bridge.feature.pipeline.BaseCommandHandler
 import com.sentinel.bridge.feature.pipeline.CommandResult
+import com.sentinel.bridge.feature.pipeline.InferenceSettings
 import com.sentinel.bridge.feature.pipeline.PipelineSessionStore
 import com.sentinel.bridge.feature.pipeline.commands.PipelineCommand
 import java.time.Instant
@@ -62,11 +64,23 @@ class BuildPromptHandler @Inject constructor(
 
         val renderedPrompt = promptRenderer.render(template, variables)
 
+        // Without the model's conversation format the prompt reads as a document to
+        // continue rather than a question to answer, and generation never terminates
+        // on an end-of-turn token.
+        val chatPrompt = ChatTemplates.apply(renderedPrompt, template.chatFormat)
+
         sessionStore.update(command.sessionId) {
             it.copy(
-                renderedPrompt = renderedPrompt,
+                renderedPrompt = chatPrompt,
                 promptVersion = "${template.name}@${template.version}",
-                model = template.model
+                model = template.model,
+                inference = InferenceSettings(
+                    temperature = template.temperature,
+                    maxTokens = template.maxTokens,
+                    topP = template.topP,
+                    topK = template.topK,
+                    repeatPenalty = template.repeatPenalty
+                )
             )
         }
 
@@ -74,7 +88,8 @@ class BuildPromptHandler @Inject constructor(
             command.sessionId,
             stage.name,
             "Prompt rendered (template=${template.name}, version=${template.version}, " +
-                "length=${renderedPrompt.length} chars)"
+                "chatFormat=${template.chatFormat}, length=${chatPrompt.length} chars, " +
+                "maxTokens=${template.maxTokens})"
         )
 
         return CommandResult.Success(command.sessionId)

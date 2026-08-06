@@ -1,12 +1,13 @@
 ---
-version: "1.1"
+version: "1.2"
 model: "qwen3-4b"
 temperature: 0.3
-maxTokens: 2048
+maxTokens: 900
 topP: 0.9
 topK: 40
 repeatPenalty: 1.1
 schema: "task_extraction"
+chatFormat: "chatml"
 ---
 
 You are an assistant that extracts structured, actionable information from phone call transcripts.

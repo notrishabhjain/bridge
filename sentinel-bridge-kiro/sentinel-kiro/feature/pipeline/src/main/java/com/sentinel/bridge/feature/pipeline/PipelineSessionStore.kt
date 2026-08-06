@@ -26,13 +26,35 @@ class MissingSessionStateException(
 )
 
 /**
+ * Sampling parameters for a run, taken from the prompt template that produced the prompt.
+ *
+ * Carried on the session so the inference stage uses the settings the prompt was
+ * authored against rather than its own constants, which drift apart silently.
+ *
+ * @property temperature Sampling temperature.
+ * @property maxTokens Upper bound on generated tokens.
+ * @property topP Nucleus sampling threshold.
+ * @property topK Top-K sampling cutoff.
+ * @property repeatPenalty Penalty applied to repeated sequences.
+ */
+data class InferenceSettings(
+    val temperature: Float,
+    val maxTokens: Int,
+    val topP: Float,
+    val topK: Int,
+    val repeatPenalty: Float
+)
+
+/**
  * Values handed from one pipeline stage to the next within a single run.
  *
  * @property transcript Conversation text to analyse, from the recorder or manual entry.
  * @property language Language of [transcript], used to render the prompt.
- * @property renderedPrompt Prompt produced by the build-prompt stage.
+ * @property renderedPrompt Prompt produced by the build-prompt stage, already wrapped in
+ *   the model's conversation format.
  * @property promptVersion Version of the prompt template used.
  * @property model Model identifier the prompt targets.
+ * @property inference Sampling parameters from the prompt template.
  * @property rawResponse Unparsed model output.
  * @property result Structured result parsed from [rawResponse].
  * @property startedAtMs Epoch millis when the run began, for processing-time reporting.
@@ -43,6 +65,7 @@ data class PipelineSessionState(
     val renderedPrompt: String? = null,
     val promptVersion: String? = null,
     val model: String? = null,
+    val inference: InferenceSettings? = null,
     val rawResponse: String? = null,
     val result: PipelineResult? = null,
     val startedAtMs: Long = System.currentTimeMillis()

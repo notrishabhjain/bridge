@@ -117,7 +117,8 @@ class PromptRepository @Inject constructor(
             topK = metadata["topK"]?.toIntOrFloat() ?: 40,
             repeatPenalty = metadata["repeatPenalty"]?.toFloat() ?: 1.0f,
             schema = schema,
-            body = body
+            body = body,
+            chatFormat = metadata["chatFormat"] ?: ChatTemplates.DEFAULT
         )
     }
 

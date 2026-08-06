@@ -16,6 +16,8 @@ package com.sentinel.bridge.feature.ai.prompt
  * @property topK Top-K sampling — number of highest-probability tokens to consider.
  * @property repeatPenalty Penalty applied to repeated token sequences.
  * @property schema Name of the output JSON schema this prompt targets.
+ * @property chatFormat Conversation format the target model expects, applied by
+ *   [ChatTemplates]. Defaults to [ChatTemplates.DEFAULT] when the frontmatter omits it.
  * @property body The prompt body text (everything after the closing `---` delimiter).
  */
 data class PromptTemplate(
@@ -28,5 +30,6 @@ data class PromptTemplate(
     val topK: Int,
     val repeatPenalty: Float,
     val schema: String,
-    val body: String
+    val body: String,
+    val chatFormat: String = ChatTemplates.DEFAULT
 )
